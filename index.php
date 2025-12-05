@@ -39,7 +39,17 @@ if (isset($_GET['ctl'])) {
         case 'participation':
             include 'Controleur/ctlParticipation.php';
             break;
-            
+
+        case 'parametres':
+            include 'Controleur/ctlParametres.php';
+            break;
+
+        case 'amis':
+            include 'Controleur/ctlAmis.php';
+            break;
+
+        
+
         default:
             // Par défaut, afficher la landing page
             include 'Vue/body.php';

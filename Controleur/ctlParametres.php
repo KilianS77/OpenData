@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../M/SettingsModel.php';
+require_once __DIR__ . '/../Model/SettingsModel.php';
 
 // Vérifier que l'utilisateur est connecté
 if (!isset($_SESSION['connect']) || $_SESSION['connect'] !== true) {
@@ -18,7 +18,7 @@ $action = $_GET['action'] ?? 'afficher_parametres';
 switch ($action) {
 
     case 'afficher_parametres':
-        include __DIR__ . '/../V/vueParametres/parametres.php';
+        include __DIR__ . '/../Vue/vueParametres/parametres.php';
         break;
     
     case 'update_setting':
