@@ -150,28 +150,6 @@ switch ($action) {
             // Créer la participation
             $heurePresence = !empty($heurePresence) ? $heurePresence : null;
             
-            // Log des données avant insertion (dans fichier personnalisé)
-            $logFile = __DIR__ . '/../logs/participation.log';
-            $logDir = dirname($logFile);
-            if (!file_exists($logDir)) {
-                mkdir($logDir, 0755, true);
-            }
-            $logToFile = function($message) use ($logFile) {
-                $timestamp = date('Y-m-d H:i:s');
-                file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
-            };
-            
-            $logMsg = "=== TENTATIVE CREATION PARTICIPATION ===\n";
-            $logMsg .= "userId: " . $userId . "\n";
-            $logMsg .= "activityType: " . $activityType . "\n";
-            $logMsg .= "activityId: " . $activityId . " (type: " . gettype($activityId) . ")\n";
-            $logMsg .= "datePresence: " . $datePresence . "\n";
-            $logMsg .= "heurePresence: " . ($heurePresence ?? 'NULL') . "\n";
-            $logMsg .= "activityDescription: " . $activityDescription;
-            
-            error_log($logMsg);
-            $logToFile($logMsg);
-            
             try {
                 $result = ParticipationModel::createParticipation(
                     $userId,
@@ -198,8 +176,7 @@ switch ($action) {
                     if ($alreadyExists) {
                         $_SESSION['error'] = 'Vous êtes déjà inscrit à cette activité pour cette date';
                     } else {
-                        $_SESSION['error'] = 'Erreur lors de l\'enregistrement de la participation. Consultez les logs pour plus de détails.';
-                        error_log("❌ Échec de la création de participation sans erreur détectée");
+                        $_SESSION['error'] = 'Erreur lors de l\'enregistrement de la participation. Veuillez réessayer.';
                     }
                     $_SESSION['form_data'] = $_POST;
                     header('Location: index.php?ctl=participation&action=participer&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId) . '&ActivityDescription=' . urlencode($activityDescription));

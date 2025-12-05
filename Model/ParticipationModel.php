@@ -33,29 +33,7 @@ class ParticipationModel {
      * Créer une nouvelle participation
      */
     public static function createParticipation($userId, $activityType, $activityId, $datePresence, $heurePresence, $activityDescription) {
-        // Fonction pour logger dans un fichier personnalisé
-        $logToFile = function($message) {
-            $logFile = __DIR__ . '/../logs/participation.log';
-            $logDir = dirname($logFile);
-            if (!file_exists($logDir)) {
-                mkdir($logDir, 0755, true);
-            }
-            $timestamp = date('Y-m-d H:i:s');
-            file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
-        };
-        
         try {
-            // Log des paramètres reçus
-            $logMsg = "=== CREATE PARTICIPATION ===\n";
-            $logMsg .= "userId: " . $userId . "\n";
-            $logMsg .= "activityType: " . $activityType . "\n";
-            $logMsg .= "activityId: " . $activityId . " (type: " . gettype($activityId) . ")\n";
-            $logMsg .= "datePresence: " . $datePresence . "\n";
-            $logMsg .= "heurePresence: " . ($heurePresence ?? 'NULL') . "\n";
-            $logMsg .= "activityDescription: " . $activityDescription;
-            
-            error_log($logMsg);
-            $logToFile($logMsg);
             
             $db = MySqlDb::getPdoDb();
             $stmt = $db->prepare("
@@ -78,62 +56,33 @@ class ParticipationModel {
             $result = $stmt->execute();
             $rowCount = $stmt->rowCount();
             
-            $logMsg = "execute() result: " . ($result ? 'true' : 'false') . "\n";
-            $logMsg .= "rowCount(): " . $rowCount;
-            error_log($logMsg);
-            $logToFile($logMsg);
-            
             if (!$result) {
                 $errorInfo = $stmt->errorInfo();
-                $errorMsg = "Erreur SQL createParticipation: " . print_r($errorInfo, true);
-                error_log($errorMsg);
-                $logToFile($errorMsg);
+                error_log("Erreur SQL createParticipation: " . print_r($errorInfo, true));
                 return false;
             }
             
             // Vérifier que des lignes ont été insérées
             if ($rowCount === 0) {
                 $errorInfo = $stmt->errorInfo();
-                $errorMsg = "Aucune ligne insérée - ErrorInfo: " . print_r($errorInfo, true);
-                error_log($errorMsg);
-                $logToFile($errorMsg);
+                error_log("Aucune ligne insérée - ErrorInfo: " . print_r($errorInfo, true));
                 
                 // Vérifier si c'est une erreur de contrainte unique
                 if (isset($errorInfo[1]) && $errorInfo[1] == 1062) {
-                    $dupMsg = "Tentative de création d'un doublon détectée (code 1062)";
-                    error_log($dupMsg);
-                    $logToFile($dupMsg);
+                    error_log("Tentative de création d'un doublon détectée (code 1062)");
                 }
                 return false;
             }
             
-            $successMsg = "✅ Participation créée avec succès (ID: " . $db->lastInsertId() . ")";
-            error_log($successMsg);
-            $logToFile($successMsg);
             return true;
             
         } catch (PDOException $e) {
-            $logFile = __DIR__ . '/../logs/participation.log';
-            $logDir = dirname($logFile);
-            if (!file_exists($logDir)) {
-                mkdir($logDir, 0755, true);
-            }
-            $logToFile = function($message) use ($logFile) {
-                $timestamp = date('Y-m-d H:i:s');
-                file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
-            };
-            
-            $errorMsg = "❌ Erreur PDO createParticipation: " . $e->getMessage() . "\n";
-            $errorMsg .= "Code erreur: " . $e->getCode() . "\n";
-            $errorMsg .= "SQLSTATE: " . $e->getCode();
-            error_log($errorMsg);
-            $logToFile($errorMsg);
+            error_log("Erreur PDO createParticipation: " . $e->getMessage());
+            error_log("Code erreur: " . $e->getCode());
             
             // Si c'est une erreur de contrainte unique, on la gère spécifiquement
             if ($e->getCode() == 23000) { // SQLSTATE 23000 = Integrity constraint violation
-                $constraintMsg = "Violation de contrainte d'intégrité (probablement doublon)";
-                error_log($constraintMsg);
-                $logToFile($constraintMsg);
+                error_log("Violation de contrainte d'intégrité (probablement doublon)");
             }
             return false;
         }
