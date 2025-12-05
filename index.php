@@ -7,7 +7,7 @@ $isAjaxRequest = (
      isset($_GET['action']) && $_GET['action'] === 'update_setting' &&
      $_SERVER['REQUEST_METHOD'] === 'POST') ||
     (isset($_GET['ctl']) && $_GET['ctl'] === 'activity' && 
-     $_SERVER['REQUEST_METHOD'] === 'POST')
+     ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['action']) && $_GET['action'] === 'get_activities')))
 );
 
 // Ne pas inclure l'entête et le footer pour les requêtes AJAX
@@ -32,7 +32,13 @@ if (isset($_GET['ctl'])) {
             include 'Vue/Map/map.php';
             break;
 
-       
+        case 'activity':
+            include 'Controleur/ctlActivity.php';
+            break;
+        
+        case 'participation':
+            include 'Controleur/ctlParticipation.php';
+            break;
             
         default:
             // Par défaut, afficher la landing page

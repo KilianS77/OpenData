@@ -14,9 +14,12 @@ class MySqlDb {
 
     public static function getPdoDb() {
         if (!self::$objPdoDb) {
-            // Vérifier si les variables d'environnement sont déjà chargées
-            if (empty($_ENV['DB_NAME']) || empty($_ENV['DB_HOST'])) {
-                $env = self::getEnvVariables();
+            // Charger les variables d'environnement
+            $env = self::getEnvVariables();
+            
+            // Vérifier que les variables nécessaires sont présentes
+            if (empty($env['DB_NAME']) || empty($env['DB_HOST']) || empty($env['DB_USER'])) {
+                throw new Exception("Configuration de base de données manquante. Vérifiez le fichier .env");
             }
             
             $dsn = sprintf(
@@ -25,15 +28,20 @@ class MySqlDb {
                 $env['DB_HOST']
             );
             
-            self::$objPdoDb = new PDO(
-                $dsn,
-                $env['DB_USER'],
-                $env['DB_PASSWORD'],
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-                ]
-            );
+            try {
+                self::$objPdoDb = new PDO(
+                    $dsn,
+                    $env['DB_USER'],
+                    $env['DB_PASSWORD'] ?? '',
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                    ]
+                );
+            } catch (PDOException $e) {
+                error_log("Erreur de connexion à la base de données: " . $e->getMessage());
+                throw new Exception("Impossible de se connecter à la base de données: " . $e->getMessage());
+            }
         }
         return self::$objPdoDb;
     }

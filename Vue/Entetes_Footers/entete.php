@@ -15,9 +15,10 @@
             <nav class="flex items-center space-x-3">
                 <?php if (isset($_SESSION['connect']) && $_SESSION['connect'] === true): ?>
                     <!-- Utilisateur connecté -->
-                    <span class="text-sm text-gray-600 mr-2">
-                        <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Utilisateur'); ?>
-                    </span>
+                    <a href="index.php?ctl=map" 
+                       class="px-4 py-2 text-sm text-gray-700 hover:text-red-500 transition-colors border border-transparent hover:border-red-500">
+                        Map
+                    </a>
                     <a href="index.php?ctl=participation&action=mes_participations" 
                        class="px-4 py-2 text-sm text-gray-700 hover:text-red-500 transition-colors border border-transparent hover:border-red-500">
                         Mes participations

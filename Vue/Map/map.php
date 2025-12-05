@@ -161,7 +161,23 @@
 const isConnected = <?php echo (isset($_SESSION['connect']) && $_SESSION['connect'] === true) ? 'true' : 'false'; ?>;
 const userId = <?php echo isset($_SESSION['user_id']) ? json_encode($_SESSION['user_id']) : 'null'; ?>;
 const userName = <?php echo isset($_SESSION['user_name']) ? json_encode($_SESSION['user_name']) : 'null'; ?>;
+const participationsData = {}; // Données de participation (sera chargé depuis le serveur si nécessaire)
 
+// Fonction pour générer un hash MD5 (implémentation simple)
+// Note: Pour une correspondance exacte avec PHP md5(), il faudrait utiliser une bibliothèque MD5 complète
+// Cette fonction génère un hash similaire pour la cohérence des IDs
+function md5(str) {
+    // Implémentation MD5 simplifiée - génère un hash de 32 caractères
+    let hash = 0;
+    if (str.length === 0) return hash.toString(16).padStart(32, '0');
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    // Convertir en hexadécimal et prendre 32 caractères
+    return Math.abs(hash).toString(16).padStart(32, '0').substring(0, 32);
+}
 
 let markers = [];
 let activities = [];
@@ -209,146 +225,110 @@ const iconTypes = {
     })
 };
 
+// Fonction pour synchroniser les activités depuis l'API vers la base de données
+async function syncActivitiesFromAPI() {
+    try {
+        console.log('Synchronisation des activités depuis l\'API...');
+        const response = await fetch('index.php?ctl=activity&action=sync', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            console.error(`Erreur HTTP ${response.status} lors de la synchronisation`);
+            const text = await response.text();
+            console.error('Réponse:', text);
+            return { success: false, error: `HTTP ${response.status}` };
+        }
+        
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            const text = await response.text();
+            console.error('❌ Erreur parsing JSON:', e);
+            console.error('Réponse brute:', text);
+            return { success: false, error: 'Erreur parsing JSON: ' + e.message };
+        }
+        
+        if (result.success) {
+            console.log(`✅ Synchronisation terminée: ${result.saved} créées, ${result.updated} mises à jour, ${result.errors} erreurs`);
+            if (result.total_in_db !== undefined) {
+                console.log(`📊 Total d'activités en base: ${result.total_in_db}`);
+            }
+        } else {
+            console.error('❌ Échec de la synchronisation:', result);
+        }
+        return result;
+    } catch (error) {
+        console.error('❌ Erreur lors de la synchronisation:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Fonction pour charger les activités depuis la base de données
+async function loadActivitiesFromDatabase() {
+    try {
+        console.log('Chargement des activités depuis la base de données...');
+        const response = await fetch('index.php?ctl=activity&action=get_activities');
+        if (!response.ok) {
+            console.error(`Erreur HTTP ${response.status}`);
+            return [];
+        }
+        const data = await response.json();
+        if (data.success && data.activities) {
+            console.log(`✅ ${data.activities.length} activités chargées depuis la base de données`);
+            return data.activities;
+        }
+        return [];
+    } catch (error) {
+        console.error('Erreur lors du chargement depuis la base:', error);
+        return [];
+    }
+}
+
 // Fonction pour charger les données depuis les APIs
 async function loadActivities() {
-    const apis = [
-        {
-            url: 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/equipements-sportifs/records?limit=-1',
-            type: 'equipements'
-        },
-        {
-            url: 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/aires-de-jeux/records?limit=-1',
-            type: 'aires'
-        }
-    ];
-
-    activities = [];
-
-    for (const api of apis) {
-        try {
-            console.log(`Chargement de ${api.type}...`);
-            const response = await fetch(api.url);
-            const data = await response.json();
-            
-            if (data.results && data.results.length > 0) {
-                data.results.forEach(item => {
-                    // La structure de l'API: { record: { id: ..., fields: { ... } } }
-                    const record = item.record || {};
-                    const fields = record.fields || item; // Fallback si pas de structure record
-                    const recordId = record.id || item.recordid || null;
-                    
-                    // Pour équipements sportifs
-                    if (api.type === 'equipements') {
-                        // Utiliser l'ID de l'API si disponible, sinon créer un ID stable
-                        let finalRecordId = recordId;
-                        if (!finalRecordId) {
-                            const name = fields.equip_nom || '';
-                            const address = fields.adr_num_et_rue || '';
-                            if (name || address) {
-                                finalRecordId = `${name}_${address}`.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
-                            } else {
-                                finalRecordId = `equip_${activities.length}`;
-                            }
-                        }
-                        
-                        const activityId = `${api.type}_${finalRecordId}`;
-                        const activity = {
-                            id: activityId,
-                            type: api.type,
-                            name: fields.equip_nom || 'Nom non disponible',
-                            address: fields.adr_num_et_rue || 'Adresse non disponible',
-                            commune: fields.adr_commune || 'Melun',
-                            lat: parseFloat(fields.equip_lat || fields.point_geo?.lat || (fields.point_geo && Array.isArray(fields.point_geo) ? fields.point_geo[0] : null) || 48.54),
-                            lon: parseFloat(fields.equip_long || fields.point_geo?.lon || (fields.point_geo && Array.isArray(fields.point_geo) ? fields.point_geo[1] : null) || 2.66),
-                            description: fields.equip_type || '',
-                            participants: participationsData[activityId] || []
-                        };
-                        activities.push(activity);
-                    }
-                    // Pour aires de jeux
-                    else if (api.type === 'aires') {
-                        // Utiliser l'ID de l'API si disponible, sinon créer un ID stable
-                        let finalRecordId = recordId;
-                        if (!finalRecordId) {
-                            const name = fields.libelle || '';
-                            const address = fields.adresse || '';
-                            if (name || address) {
-                                finalRecordId = `${name}_${address}`.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
-                            } else {
-                                finalRecordId = `aire_${activities.length}`;
-                            }
-                        }
-                        
-                        const activityId = `${api.type}_${finalRecordId}`;
-                        const activity = {
-                            id: activityId,
-                            type: api.type,
-                            name: fields.libelle || 'Nom non disponible',
-                            address: fields.adresse || 'Adresse non disponible',
-                            commune: fields.commune || 'Melun',
-                            lat: parseFloat(fields.geo_point_2d?.lat || (fields.geo_point_2d && Array.isArray(fields.geo_point_2d) ? fields.geo_point_2d[0] : null) || 48.54),
-                            lon: parseFloat(fields.geo_point_2d?.lon || (fields.geo_point_2d && Array.isArray(fields.geo_point_2d) ? fields.geo_point_2d[1] : null) || 2.66),
-                            description: fields.famille_eqpt || '',
-                            participants: participationsData[activityId] || []
-                        };
-                        activities.push(activity);
-                    }
-                });
-                console.log(`${api.type}: ${data.results.length} résultats chargés (total: ${data.total_count})`);
-            }
-        } catch (error) {
-            console.error(`Erreur lors du chargement de ${api.type}:`, error);
-        }
-    }
-
-    // Sauvegarder les activités dans la base de données
-    saveActivitiesToDatabase();
+    // D'abord synchroniser depuis l'API vers la base de données
+    await syncActivitiesFromAPI();
     
+    // Ensuite charger depuis la base de données pour avoir les vrais IDs
+    activities = await loadActivitiesFromDatabase();
+    
+    console.log(`Total activités chargées: ${activities.length}`);
     displayActivities();
     displayMarkers();
 }
 
-// Fonction pour sauvegarder les activités dans la base de données
-async function saveActivitiesToDatabase() {
-    if (activities.length === 0) return;
-    
-    try {
-        const response = await fetch('index.php?ctl=activity', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ activities: activities })
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            console.log(`Activités sauvegardées: ${result.saved} (erreurs: ${result.errors})`);
-        }
-    } catch (error) {
-        console.error('Erreur lors de la sauvegarde des activités:', error);
-    }
-}
-
 // Les participations sont maintenant gérées côté serveur via la base de données
-// Plus besoin de charger via API
+// La synchronisation des activités se fait automatiquement au chargement de la page
 
 // Fonction pour afficher les marqueurs sur la carte
 function displayMarkers() {
+    console.log('displayMarkers appelé, activités:', activities.length);
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 
     const activeFilters = Array.from(document.querySelectorAll('.filter-checkbox:checked'))
         .map(cb => cb.dataset.type);
+    
+    console.log('Filtres actifs:', activeFilters);
 
     activities.forEach(activity => {
-        if (activeFilters.includes(activity.type)) {
+        // Mapper les types de la base de données vers les types de filtres
+        const filterType = activity.type === 'aires_jeux' ? 'aires' : (activity.type === 'equipements_sportifs' ? 'equipements' : activity.type);
+        // Mapper aussi pour les icônes
+        const iconType = activity.type === 'aires_jeux' ? 'aires' : (activity.type === 'equipements_sportifs' ? 'equipements' : activity.type);
+        console.log('Traitement activité:', activity.id, 'type:', activity.type, 'filterType:', filterType, 'iconType:', iconType, 'filtres:', activeFilters, 'match:', activeFilters.includes(filterType), 'coords:', activity.lat, activity.lon);
+        if (activeFilters.includes(filterType) && activity.lat && activity.lon && !isNaN(activity.lat) && !isNaN(activity.lon)) {
             const marker = L.marker([activity.lat, activity.lon], {
-                icon: iconTypes[activity.type] || iconTypes.points
+                icon: iconTypes[iconType] || iconTypes.points
             }).addTo(map);
 
             const canParticipate = isConnected;
-            const participantsCount = isConnected ? activity.participants.length : '?';
+            const participantsCount = isConnected ? (activity.participants ? activity.participants.length : 0) : '?';
 
             const popupContent = `
                 <div class="p-3">
@@ -362,7 +342,7 @@ function displayMarkers() {
                             Détails
                         </button>
                         ${canParticipate ? `
-                        <a href="index.php?ctl=participation&action=participer&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
+                        <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type === 'aires' ? 'aires_jeux' : 'equipements_sportifs')}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
                                 class="px-3 py-1 bg-red-500 text-white text-xs font-light hover:bg-red-600 transition-colors inline-block">
                             Participer
                         </a>
@@ -399,7 +379,7 @@ function displayActivities() {
 
     listContainer.innerHTML = filteredActivities.map(activity => {
         const canParticipate = isConnected;
-        const participantsCount = isConnected ? activity.participants.length : '?';
+        const participantsCount = isConnected ? (activity.participants ? activity.participants.length : 0) : '?';
         
         return `
         <div class="bg-white border border-gray-200 p-4 hover:border-red-500 transition-colors cursor-pointer" 
@@ -407,17 +387,17 @@ function displayActivities() {
             <div class="flex justify-between items-start mb-3">
                 <h3 class="font-light text-gray-900 text-sm">${activity.name}</h3>
                 <span class="px-2 py-1 text-xs border border-red-500 text-red-500 font-light">
-                    ${activity.type}
+                    ${activity.type === 'aires_jeux' ? 'Aire de jeux' : (activity.type === 'equipements_sportifs' ? 'Équipement sportif' : activity.type)}
                 </span>
             </div>
             <p class="text-xs text-gray-600 mb-2 font-light">${activity.address}</p>
             <p class="text-xs text-gray-500 mb-3 font-light">${activity.description}</p>
             <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                 <span class="text-xs text-gray-500 font-light">
-                    ${canParticipate ? `${participantsCount} participant${participantsCount > 1 ? 's' : ''}` : 'Connectez-vous pour voir les participants'}
+                    ${canParticipate ? `${participantsCount !== '?' ? participantsCount : 0} participant${participantsCount !== '?' && participantsCount > 1 ? 's' : ''}` : 'Connectez-vous pour voir les participants'}
                 </span>
                 ${canParticipate ? `
-                <a href="index.php?ctl=participation&action=participer&activity_id=${activity.id}" 
+                <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
                         onclick="event.stopPropagation();"
                         class="px-3 py-1 bg-red-500 text-white text-xs font-light hover:bg-red-600 transition-colors inline-block">
                     Participer
@@ -463,27 +443,26 @@ function showActivityDetails(activityId) {
                     
                     ${canSeeParticipants ? `
                     <div class="border-b border-gray-200 pb-4">
-                        <h3 class="font-light text-sm text-gray-700 mb-3 tracking-wide">Participants (${activity.participants.length})</h3>
+                        <h3 class="font-light text-sm text-gray-700 mb-3 tracking-wide">Participants (${activity.participants ? activity.participants.length : 0})</h3>
                         <div class="space-y-2">
-                            ${activity.participants.map(p => `
+                            ${activity.participants && activity.participants.length > 0 ? activity.participants.map(p => `
                                 <div class="flex items-center justify-between border border-gray-200 p-3">
                                     <span class="text-sm font-light text-gray-700">${p.name}</span>
                                     ${p.date ? `<span class="text-xs text-gray-500 font-light">${p.date}</span>` : ''}
                                 </div>
-                            `).join('')}
-                            ${activity.participants.length === 0 ? '<p class="text-sm text-gray-500 font-light">Aucun participant pour le moment</p>' : ''}
+                            `).join('') : '<p class="text-sm text-gray-500 font-light">Aucun participant pour le moment</p>'}
                         </div>
                     </div>
                     ` : '<p class="text-sm text-gray-500 font-light border-b border-gray-200 pb-4">Connectez-vous pour voir les participants</p>'}
                     
                     ${canParticipate ? `
                     <div class="flex space-x-3 pt-4">
-                        <a href="index.php?ctl=participation&action=participer&activity_id=${activity.id}" 
+                        <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
                                 class="flex-1 px-4 py-2 bg-red-500 text-white font-light hover:bg-red-600 transition-colors text-center">
                             Je participe
                         </a>
                         ${canInvite ? `
-                        <a href="index.php?ctl=participation&action=inviter&activity_id=${activity.id}" 
+                        <a href="index.php?ctl=participation&action=inviter&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}" 
                                 class="flex-1 px-4 py-2 bg-white border border-red-500 text-red-500 font-light hover:bg-red-500 hover:text-white transition-colors text-center">
                             Inviter des amis
                         </a>

@@ -1,0 +1,19 @@
+
+        'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/equipements-sportifs/records?limit=-1',
+    
+        'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/aires-de-jeux/records?limit=-1',
+       
+
+Datasets souhaités   : 
+
+Aires de jeux sur Melun
+
+Equipements sportifs sur la commune de Melun
+
+Points d'intérêts de l'agglomération
+
+Agenda culturel communautaire
+
+Manifestations sportives à Melun
+
+Mais 3 api ne fonctionnent pas
