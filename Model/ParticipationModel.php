@@ -99,16 +99,25 @@ class ParticipationModel {
                        CASE 
                            WHEN p.activity_type = 'aires_jeux' THEN aj.libelle
                            WHEN p.activity_type = 'equipements_sportifs' THEN es.equip_nom
+                           WHEN p.activity_type = 'manifestations_sportives' THEN ms.manifestation
+                           WHEN p.activity_type = 'agenda_culturel' THEN ac.nom_du_spectacle
+                           WHEN p.activity_type = 'points_interets' THEN pi.libelle
                            ELSE 'Activité inconnue'
                        END as activity_name,
                        CASE 
                            WHEN p.activity_type = 'aires_jeux' THEN aj.adresse
                            WHEN p.activity_type = 'equipements_sportifs' THEN es.adr_num_et_rue
+                           WHEN p.activity_type = 'manifestations_sportives' THEN ms.lieu
+                           WHEN p.activity_type = 'agenda_culturel' THEN ac.lieu_de_representation
+                           WHEN p.activity_type = 'points_interets' THEN pi.adresse
                            ELSE ''
                        END as activity_address
                 FROM participations p
                 LEFT JOIN aires_jeux aj ON p.activity_type = 'aires_jeux' AND p.activity_id = aj.id
                 LEFT JOIN equipements_sportifs es ON p.activity_type = 'equipements_sportifs' AND p.activity_id = es.id
+                LEFT JOIN manifestations_sportives ms ON p.activity_type = 'manifestations_sportives' AND p.activity_id = ms.id
+                LEFT JOIN agenda_culturel ac ON p.activity_type = 'agenda_culturel' AND p.activity_id = ac.id
+                LEFT JOIN points_interets pi ON p.activity_type = 'points_interets' AND p.activity_id = pi.id
                 WHERE p.user_id = :userid
                 ORDER BY p.date_presence DESC, p.heure_presence DESC
             ");

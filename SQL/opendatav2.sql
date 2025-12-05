@@ -156,6 +156,85 @@ CREATE TABLE IF NOT EXISTS `equipements_sportifs` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `manifestations_sportives`
+-- Table indépendante (pas de contraintes de clé étrangère)
+--
+
+CREATE TABLE IF NOT EXISTS `manifestations_sportives` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `association_ou_service` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `manifestation` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `date_debut` date DEFAULT NULL,
+  `date_de_fin` date DEFAULT NULL,
+  `lieu` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `adresse` text COLLATE utf8mb4_unicode_ci,
+  `commune` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `latitude` decimal(10,8) DEFAULT NULL,
+  `longitude` decimal(11,8) DEFAULT NULL,
+  `data_json` json DEFAULT NULL,
+  `last_updated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_location` (`latitude`,`longitude`),
+  KEY `idx_date_fin` (`date_de_fin`),
+  KEY `idx_commune` (`commune`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `agenda_culturel`
+-- Table indépendante (pas de contraintes de clé étrangère)
+--
+
+CREATE TABLE IF NOT EXISTS `agenda_culturel` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `date` date DEFAULT NULL,
+  `horaire` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `commune` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `thematique` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nom_du_spectacle` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `lieu_de_representation` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `adresse` text COLLATE utf8mb4_unicode_ci,
+  `latitude` decimal(10,8) DEFAULT NULL,
+  `longitude` decimal(11,8) DEFAULT NULL,
+  `data_json` json DEFAULT NULL,
+  `last_updated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_location` (`latitude`,`longitude`),
+  KEY `idx_date` (`date`),
+  KEY `idx_commune` (`commune`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `points_interets`
+-- Table indépendante (pas de contraintes de clé étrangère)
+--
+
+CREATE TABLE IF NOT EXISTS `points_interets` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `libelle` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `thematique` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `descriptio` text COLLATE utf8mb4_unicode_ci,
+  `liens_vers` text COLLATE utf8mb4_unicode_ci,
+  `photo` text COLLATE utf8mb4_unicode_ci,
+  `credit_photo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `adresse` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `commune` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `code_insee` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `latitude` decimal(10,8) NOT NULL,
+  `longitude` decimal(11,8) NOT NULL,
+  `data_json` json DEFAULT NULL,
+  `last_updated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_location` (`latitude`,`longitude`),
+  KEY `idx_commune` (`commune`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `participations`
 -- Utilise activity_type et activity_id pour référencer n'importe quelle table d'activités
 -- Structure générique extensible pour toutes les futures tables d'activités

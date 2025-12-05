@@ -106,10 +106,6 @@
                             <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500" data-type="points" checked>
                             <span class="text-sm text-gray-700 font-light">Points d'intérêt</span>
                         </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500" data-type="evenements" checked>
-                            <span class="text-sm text-gray-700 font-light">Événements</span>
-                        </label>
                     </div>
                 </div>
             </div>
@@ -222,6 +218,22 @@ const iconTypes = {
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
         shadowSize: [41, 41]
+    }),
+    manifestations: L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    }),
+    agenda: L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
     })
 };
 
@@ -318,9 +330,21 @@ function displayMarkers() {
 
     activities.forEach(activity => {
         // Mapper les types de la base de données vers les types de filtres
-        const filterType = activity.type === 'aires_jeux' ? 'aires' : (activity.type === 'equipements_sportifs' ? 'equipements' : activity.type);
-        // Mapper aussi pour les icônes
-        const iconType = activity.type === 'aires_jeux' ? 'aires' : (activity.type === 'equipements_sportifs' ? 'equipements' : activity.type);
+        let filterType, iconType;
+        if (activity.type === 'aires_jeux') {
+            filterType = 'aires';
+            iconType = 'aires';
+        } else if (activity.type === 'equipements_sportifs') {
+            filterType = 'equipements';
+            iconType = 'equipements';
+        } else if (activity.type === 'points_interets') {
+            filterType = 'points';
+            iconType = 'points';
+        } else {
+            filterType = activity.type;
+            iconType = 'points';
+        }
+        
         console.log('Traitement activité:', activity.id, 'type:', activity.type, 'filterType:', filterType, 'iconType:', iconType, 'filtres:', activeFilters, 'match:', activeFilters.includes(filterType), 'coords:', activity.lat, activity.lon);
         if (activeFilters.includes(filterType) && activity.lat && activity.lon && !isNaN(activity.lat) && !isNaN(activity.lon)) {
             const marker = L.marker([activity.lat, activity.lon], {
@@ -333,8 +357,8 @@ function displayMarkers() {
             const popupContent = `
                 <div class="p-3">
                     <h3 class="font-light text-base mb-2 text-gray-900">${activity.name}</h3>
-                    <p class="text-xs text-gray-600 mb-2 font-light">${activity.address}, ${activity.commune}</p>
-                    <p class="text-xs text-gray-500 mb-3 font-light">${activity.description}</p>
+                    <p class="text-xs text-gray-600 mb-2 font-light">${activity.address || activity.commune || ''}${activity.commune && activity.address ? ', ' + activity.commune : ''}</p>
+                    <p class="text-xs text-gray-500 mb-3 font-light">${activity.description || ''}</p>
                     ${canParticipate ? `<p class="text-xs text-red-500 mb-2 font-light">${participantsCount} participant(s)</p>` : ''}
                     <div class="flex space-x-2 pt-2 border-t border-gray-200">
                         <button onclick="showActivityDetails('${activity.id}')" 
@@ -342,7 +366,7 @@ function displayMarkers() {
                             Détails
                         </button>
                         ${canParticipate ? `
-                        <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type === 'aires' ? 'aires_jeux' : 'equipements_sportifs')}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
+                        <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || activity.commune || '') + (activity.commune && activity.address ? ', ' + activity.commune : ''))}" 
                                 class="px-3 py-1 bg-red-500 text-white text-xs font-light hover:bg-red-600 transition-colors inline-block">
                             Participer
                         </a>
@@ -387,7 +411,9 @@ function displayActivities() {
             <div class="flex justify-between items-start mb-3">
                 <h3 class="font-light text-gray-900 text-sm">${activity.name}</h3>
                 <span class="px-2 py-1 text-xs border border-red-500 text-red-500 font-light">
-                    ${activity.type === 'aires_jeux' ? 'Aire de jeux' : (activity.type === 'equipements_sportifs' ? 'Équipement sportif' : activity.type)}
+                    ${activity.type === 'aires_jeux' ? 'Aire de jeux' : 
+                      activity.type === 'equipements_sportifs' ? 'Équipement sportif' : 
+                      activity.type === 'points_interets' ? 'Point d\'intérêt' : activity.type}
                 </span>
             </div>
             <p class="text-xs text-gray-600 mb-2 font-light">${activity.address}</p>

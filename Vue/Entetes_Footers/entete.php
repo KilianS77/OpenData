@@ -19,6 +19,10 @@
                        class="px-4 py-2 text-sm text-gray-700 hover:text-red-500 transition-colors border border-transparent hover:border-red-500">
                         Map
                     </a>
+                    <a href="index.php?ctl=evenements&action=liste" 
+                       class="px-4 py-2 text-sm text-gray-700 hover:text-red-500 transition-colors border border-transparent hover:border-red-500">
+                        Événements
+                    </a>
                     <a href="index.php?ctl=participation&action=mes_participations" 
                        class="px-4 py-2 text-sm text-gray-700 hover:text-red-500 transition-colors border border-transparent hover:border-red-500">
                         Mes participations

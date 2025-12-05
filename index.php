@@ -48,7 +48,9 @@ if (isset($_GET['ctl'])) {
             include 'Controleur/ctlAmis.php';
             break;
 
-        
+        case 'evenements':
+            include 'Controleur/ctlEvenements.php';
+            break;
 
         default:
             // Par défaut, afficher la landing page

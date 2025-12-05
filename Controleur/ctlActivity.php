@@ -14,9 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
         'success' => $result['success'],
         'aires' => $result['aires'],
         'equipements' => $result['equipements'],
-        'total_saved' => $result['aires']['saved'] + $result['equipements']['saved'],
-        'total_updated' => $result['aires']['updated'] + $result['equipements']['updated'],
-        'total_errors' => $result['aires']['errors'] + $result['equipements']['errors']
+        'manifestations' => $result['manifestations'],
+        'agenda' => $result['agenda'],
+        'points' => $result['points'],
+        'total_saved' => $result['aires']['saved'] + $result['equipements']['saved'] + $result['manifestations']['saved'] + $result['agenda']['saved'] + $result['points']['saved'],
+        'total_updated' => $result['aires']['updated'] + $result['equipements']['updated'] + $result['manifestations']['updated'] + $result['agenda']['updated'] + $result['points']['updated'],
+        'total_errors' => $result['aires']['errors'] + $result['equipements']['errors'] + $result['manifestations']['errors'] + $result['agenda']['errors'] + $result['points']['errors']
     ]);
     exit();
 }
@@ -28,39 +31,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     try {
         $db = MySqlDb::getPdoDb();
         $activities = [];
+        $today = new DateTime('today');
+        $now = new DateTime();
         
         // Récupérer les aires de jeux
         $stmt = $db->query("SELECT id, libelle as name, adresse as address, commune, latitude, longitude, famille_eqpt as description FROM aires_jeux");
         $aires = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($aires as $aire) {
-            $activities[] = [
-                'id' => $aire['id'],
-                'type' => 'aires_jeux',
-                'name' => $aire['name'],
-                'address' => $aire['address'],
-                'commune' => $aire['commune'],
-                'lat' => floatval($aire['latitude']),
-                'lon' => floatval($aire['longitude']),
-                'description' => $aire['description'] ?? '',
-                'participants' => [] // Initialiser la liste des participants
-            ];
+            if ($aire['latitude'] && $aire['longitude']) {
+                $activities[] = [
+                    'id' => $aire['id'],
+                    'type' => 'aires_jeux',
+                    'name' => $aire['name'],
+                    'address' => $aire['address'],
+                    'commune' => $aire['commune'],
+                    'lat' => floatval($aire['latitude']),
+                    'lon' => floatval($aire['longitude']),
+                    'description' => $aire['description'] ?? '',
+                    'participants' => [] // Initialiser la liste des participants
+                ];
+            }
         }
         
         // Récupérer les équipements sportifs
         $stmt = $db->query("SELECT id, equip_nom as name, adr_num_et_rue as address, adr_commune as commune, latitude, longitude, equip_type as description FROM equipements_sportifs");
         $equipements = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($equipements as $equip) {
-            $activities[] = [
-                'id' => $equip['id'],
-                'type' => 'equipements_sportifs',
-                'name' => $equip['name'],
-                'address' => $equip['address'],
-                'commune' => $equip['commune'],
-                'lat' => floatval($equip['latitude']),
-                'lon' => floatval($equip['longitude']),
-                'description' => $equip['description'] ?? '',
-                'participants' => [] // Initialiser la liste des participants
-            ];
+            if ($equip['latitude'] && $equip['longitude']) {
+                $activities[] = [
+                    'id' => $equip['id'],
+                    'type' => 'equipements_sportifs',
+                    'name' => $equip['name'],
+                    'address' => $equip['address'],
+                    'commune' => $equip['commune'],
+                    'lat' => floatval($equip['latitude']),
+                    'lon' => floatval($equip['longitude']),
+                    'description' => $equip['description'] ?? '',
+                    'participants' => [] // Initialiser la liste des participants
+                ];
+            }
+        }
+        
+        // Récupérer les points d'intérêt
+        $stmt = $db->query("SELECT id, libelle as name, adresse as address, commune, latitude, longitude, thematique as description FROM points_interets");
+        $points = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($points as $point) {
+            if ($point['latitude'] && $point['longitude']) {
+                $activities[] = [
+                    'id' => $point['id'],
+                    'type' => 'points_interets',
+                    'name' => $point['name'],
+                    'address' => $point['address'],
+                    'commune' => $point['commune'],
+                    'lat' => floatval($point['latitude']),
+                    'lon' => floatval($point['longitude']),
+                    'description' => $point['description'] ?? '',
+                    'participants' => []
+                ];
+            }
         }
         
         echo json_encode([
