@@ -79,32 +79,32 @@
     }
 </style>
 
-<div class="min-h-screen bg-white p-6">
-    <div class="max-w-7xl mx-auto bg-white border border-red-500">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-white p-6">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         
         <!-- Header de la page -->
-        <div class="bg-white border-b border-red-500 p-6">
+        <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
             <div class="flex items-start justify-between flex-wrap gap-4">
                 <div>
-                    <h1 class="text-2xl font-light text-gray-900 mb-1 tracking-tight">Carte Interactive</h1>
-                    <p class="text-sm text-gray-600 font-light">Découvrez et participez aux événements de votre ville</p>
+                    <h1 class="text-3xl font-bold text-white mb-1 tracking-tight">Carte Interactive</h1>
+                    <p class="text-sm text-red-100 font-light">Découvrez et participez aux événements de votre ville</p>
                 </div>
                 
                 <!-- Filtres dans le header -->
-                <div class="bg-white border border-red-500 p-4">
-                    <h3 class="font-light text-sm text-gray-900 mb-4 tracking-wide">Filtres</h3>
+                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-lg">
+                    <h3 class="font-semibold text-sm text-gray-900 mb-4 tracking-wide">Filtres</h3>
                     <div class="flex flex-wrap gap-4">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500" data-type="equipements" checked>
-                            <span class="text-sm text-gray-700 font-light">Équipements sportifs</span>
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                            <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500 rounded" data-type="equipements" checked>
+                            <span class="text-sm text-gray-700 font-medium">Équipements sportifs</span>
                         </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500" data-type="aires" checked>
-                            <span class="text-sm text-gray-700 font-light">Aires de jeux</span>
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                            <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500 rounded" data-type="aires" checked>
+                            <span class="text-sm text-gray-700 font-medium">Aires de jeux</span>
                         </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500" data-type="points" checked>
-                            <span class="text-sm text-gray-700 font-light">Points d'intérêt</span>
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                            <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500 rounded" data-type="points" checked>
+                            <span class="text-sm text-gray-700 font-medium">Points d'intérêt</span>
                         </label>
                     </div>
                 </div>
@@ -116,17 +116,17 @@
             
             <!-- Carte OpenStreetMap -->
             <div class="flex-1 p-6" style="height: 100%; overflow: hidden;">
-                <div id="map" class="border border-red-500 rounded" style="height: 100%;"></div>
+                <div id="map" class="border-2 border-gray-200 rounded-xl shadow-lg" style="height: 100%;"></div>
             </div>
 
             <!-- Sidebar avec liste des activités -->
-            <div class="w-96 bg-white border-l border-red-500 flex flex-col" style="height: 100%;">
+            <div class="w-96 bg-white border-l border-gray-200 flex flex-col shadow-lg" style="height: 100%;">
                 
                 <!-- En-tête sidebar -->
-                <div class="p-5 bg-white border-b border-red-500 flex-shrink-0">
+                <div class="p-5 bg-gray-50 border-b border-gray-200 flex-shrink-0">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-light text-gray-900 tracking-tight">Activités</h2>
-                        <button id="refreshBtn" type="button" class="rounded-lg bg-transparent text-red-500 hover:bg-red-500 hover:text-white">
+                        <h2 class="text-lg font-bold text-gray-900 tracking-tight">Activités</h2>
+                        <button id="refreshBtn" type="button" class="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-200">
                             Actualiser
                         </button>
                     </div>
@@ -362,12 +362,12 @@ function displayMarkers() {
                     ${canParticipate ? `<p class="text-xs text-red-500 mb-2 font-light">${participantsCount} participant(s)</p>` : ''}
                     <div class="flex space-x-2 pt-2 border-t border-gray-200">
                         <button onclick="showActivityDetails('${activity.id}')" 
-                                class="px-3 py-1 bg-white border border-red-500 text-red-500 text-xs font-light hover:bg-red-500 hover:text-white transition-colors">
+                                class="px-3 py-1.5 bg-white border-2 border-red-500 text-red-500 text-xs font-semibold rounded-lg hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md transition-all duration-200">
                             Détails
                         </button>
                         ${canParticipate ? `
                         <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || activity.commune || '') + (activity.commune && activity.address ? ', ' + activity.commune : ''))}" 
-                                class="px-3 py-1 bg-red-500 text-white text-xs font-light hover:bg-red-600 transition-colors inline-block">
+                                class="px-3 py-1.5 bg-red-500 text-white text-xs font-semibold rounded-lg hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-200 inline-block">
                             Participer
                         </a>
                         ` : ''}
@@ -409,8 +409,8 @@ function displayActivities() {
         <div class="bg-white border border-gray-200 p-4 hover:border-red-500 transition-colors cursor-pointer" 
              onclick="showActivityDetails('${activity.id}')">
             <div class="flex justify-between items-start mb-3">
-                <h3 class="font-light text-gray-900 text-sm">${activity.name}</h3>
-                <span class="px-2 py-1 text-xs border border-red-500 text-red-500 font-light">
+                <h3 class="font-semibold text-gray-900 text-sm">${activity.name}</h3>
+                <span class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
                     ${activity.type === 'aires_jeux' ? 'Aire de jeux' : 
                       activity.type === 'equipements_sportifs' ? 'Équipement sportif' : 
                       activity.type === 'points_interets' ? 'Point d\'intérêt' : activity.type}
@@ -448,32 +448,32 @@ function showActivityDetails(activityId) {
     modal.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center';
     modal.style.zIndex = '99999';
     modal.innerHTML = `
-        <div class="bg-white border border-red-500 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-8">
                 <div class="flex justify-between items-start mb-6">
-                    <h2 class="text-xl font-light text-gray-900 tracking-tight">${activity.name}</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 tracking-tight">${activity.name}</h2>
                     <button onclick="this.closest('.fixed').remove()" 
-                            class="text-gray-400 hover:text-gray-600 text-2xl font-light">&times;</button>
+                            class="text-gray-400 hover:text-gray-600 text-2xl font-light hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
                 </div>
                 
                 <div class="space-y-6">
                     <div class="border-b border-gray-200 pb-4">
-                        <h3 class="font-light text-sm text-gray-700 mb-2 tracking-wide">Adresse</h3>
+                        <h3 class="font-semibold text-sm text-gray-700 mb-2 tracking-wide">📍 Adresse</h3>
                         <p class="text-sm text-gray-600 font-light">${activity.address}, ${activity.commune}</p>
                     </div>
                     
                     <div class="border-b border-gray-200 pb-4">
-                        <h3 class="font-light text-sm text-gray-700 mb-2 tracking-wide">Description</h3>
+                        <h3 class="font-semibold text-sm text-gray-700 mb-2 tracking-wide">📝 Description</h3>
                         <p class="text-sm text-gray-600 font-light">${activity.description}</p>
                     </div>
                     
                     ${canSeeParticipants ? `
                     <div class="border-b border-gray-200 pb-4">
-                        <h3 class="font-light text-sm text-gray-700 mb-3 tracking-wide">Participants (${activity.participants ? activity.participants.length : 0})</h3>
+                        <h3 class="font-semibold text-sm text-gray-700 mb-3 tracking-wide">👥 Participants (${activity.participants ? activity.participants.length : 0})</h3>
                         <div class="space-y-2">
                             ${activity.participants && activity.participants.length > 0 ? activity.participants.map(p => `
-                                <div class="flex items-center justify-between border border-gray-200 p-3">
-                                    <span class="text-sm font-light text-gray-700">${p.name}</span>
+                                <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm">
+                                    <span class="text-sm font-medium text-gray-700">${p.name}</span>
                                     ${p.date ? `<span class="text-xs text-gray-500 font-light">${p.date}</span>` : ''}
                                 </div>
                             `).join('') : '<p class="text-sm text-gray-500 font-light">Aucun participant pour le moment</p>'}
@@ -484,12 +484,12 @@ function showActivityDetails(activityId) {
                     ${canParticipate ? `
                     <div class="flex space-x-3 pt-4">
                         <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
-                                class="flex-1 px-4 py-2 bg-red-500 text-white font-light hover:bg-red-600 transition-colors text-center">
+                                class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-center">
                             Je participe
                         </a>
                         ${canInvite ? `
                         <a href="index.php?ctl=participation&action=inviter&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}" 
-                                class="flex-1 px-4 py-2 bg-white border border-red-500 text-red-500 font-light hover:bg-red-500 hover:text-white transition-colors text-center">
+                                class="flex-1 px-4 py-2 bg-white border-2 border-red-500 text-red-500 font-semibold rounded-lg hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md transition-all duration-200 text-center">
                             Inviter des amis
                         </a>
                         ` : ''}

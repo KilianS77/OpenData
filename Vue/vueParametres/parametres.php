@@ -15,12 +15,12 @@ $participationVisibility = $settings['participation_visibility'] ?? 'friends_onl
 $viewParticipations = $settings['view_participations'] ?? 'friends_only';
 ?>
 
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             <!-- En-tête -->
-            <div class="bg-red-500 px-6 py-4">
-                <h1 class="text-3xl font-light text-white tracking-tight">Paramètres</h1>
+            <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-6">
+                <h1 class="text-3xl font-bold text-white tracking-tight">Paramètres</h1>
             </div>
             
             <!-- Contenu -->
@@ -31,7 +31,7 @@ $viewParticipations = $settings['view_participations'] ?? 'friends_only';
                     <p class="text-sm text-gray-600 mb-4">Choisissez qui peut voir vos participations aux activités</p>
                     
                     <div class="space-y-3">
-                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 <?php echo $participationVisibility === 'friends_only' ? 'border-red-500 bg-red-50' : 'border-gray-200'; ?>">
+                        <label class="flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 hover:shadow-sm <?php echo $participationVisibility === 'friends_only' ? 'border-red-500 bg-red-50 shadow-sm' : 'border-gray-200'; ?>">
                             <input 
                                 type="radio" 
                                 name="participation_visibility" 
@@ -40,10 +40,10 @@ $viewParticipations = $settings['view_participations'] ?? 'friends_only';
                                 <?php echo $participationVisibility === 'friends_only' ? 'checked' : ''; ?>
                                 onchange="updateSetting('participation_visibility', this.value)"
                             >
-                            <span class="ml-3 text-gray-700 font-medium">Mes amis uniquement</span>
+                            <span class="ml-3 text-gray-700 font-semibold">Mes amis uniquement</span>
                         </label>
                         
-                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 <?php echo $participationVisibility === 'public' ? 'border-red-500 bg-red-50' : 'border-gray-200'; ?>">
+                        <label class="flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 hover:shadow-sm <?php echo $participationVisibility === 'public' ? 'border-red-500 bg-red-50 shadow-sm' : 'border-gray-200'; ?>">
                             <input 
                                 type="radio" 
                                 name="participation_visibility" 
@@ -52,7 +52,7 @@ $viewParticipations = $settings['view_participations'] ?? 'friends_only';
                                 <?php echo $participationVisibility === 'public' ? 'checked' : ''; ?>
                                 onchange="updateSetting('participation_visibility', this.value)"
                             >
-                            <span class="ml-3 text-gray-700 font-medium">Tout le monde</span>
+                            <span class="ml-3 text-gray-700 font-semibold">Tout le monde</span>
                         </label>
                     </div>
                 </div>
@@ -63,7 +63,7 @@ $viewParticipations = $settings['view_participations'] ?? 'friends_only';
                     <p class="text-sm text-gray-600 mb-4">Choisissez quelles participations vous souhaitez voir</p>
                     
                     <div class="space-y-3">
-                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 <?php echo $viewParticipations === 'friends_only' ? 'border-red-500 bg-red-50' : 'border-gray-200'; ?>">
+                        <label class="flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 hover:shadow-sm <?php echo $viewParticipations === 'friends_only' ? 'border-red-500 bg-red-50 shadow-sm' : 'border-gray-200'; ?>">
                             <input 
                                 type="radio" 
                                 name="view_participations" 
@@ -72,10 +72,10 @@ $viewParticipations = $settings['view_participations'] ?? 'friends_only';
                                 <?php echo $viewParticipations === 'friends_only' ? 'checked' : ''; ?>
                                 onchange="updateSetting('view_participations', this.value)"
                             >
-                            <span class="ml-3 text-gray-700 font-medium">Mes amis uniquement</span>
+                            <span class="ml-3 text-gray-700 font-semibold">Mes amis uniquement</span>
                         </label>
                         
-                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 <?php echo $viewParticipations === 'public' ? 'border-red-500 bg-red-50' : 'border-gray-200'; ?>">
+                        <label class="flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 hover:shadow-sm <?php echo $viewParticipations === 'public' ? 'border-red-500 bg-red-50 shadow-sm' : 'border-gray-200'; ?>">
                             <input 
                                 type="radio" 
                                 name="view_participations" 
@@ -84,13 +84,13 @@ $viewParticipations = $settings['view_participations'] ?? 'friends_only';
                                 <?php echo $viewParticipations === 'public' ? 'checked' : ''; ?>
                                 onchange="updateSetting('view_participations', this.value)"
                             >
-                            <span class="ml-3 text-gray-700 font-medium">Tout le monde</span>
+                            <span class="ml-3 text-gray-700 font-semibold">Tout le monde</span>
                         </label>
                     </div>
                 </div>
                 
                 <!-- Message de confirmation -->
-                <div id="message" class="hidden fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+                <div id="message" class="hidden fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-xl z-50 font-semibold">
                     <span id="messageText"></span>
                 </div>
             </div>
@@ -192,7 +192,7 @@ function showMessage(text, type = 'success') {
     }
     
     messageText.textContent = text;
-    messageDiv.className = `fixed top-20 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+    messageDiv.className = `fixed top-20 right-4 px-6 py-4 rounded-xl shadow-xl z-50 font-semibold ${
         type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
     }`;
     messageDiv.classList.remove('hidden');

@@ -4,30 +4,11 @@
         'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/aires-de-jeux/records?limit=-1',
 
 
-        'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/agenda-culturel-communautaire-2025-2026/records?limit=-1',
+    AVEC HEURE ATTENTION    'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/agenda-culturel-communautaire-2025-2026/records?limit=-1',
 
 
-'url' =>   https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/manifestations-sportives-en-2025-a-melun/records?limit=-1',
+ AVEC HEURE ATTENTION    'url' =>   https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/manifestations-sportives-en-2025-a-melun/records?limit=-1',
 
       'url' =>   https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/points-d-interets/records?limit=-1',
 
        
-
-Datasets souhaités   : 
-
-
-
-Aires de jeux sur Melun
-
-
-
-
-Points d'intérêts de l'agglomération      
-
-
-
-Agenda culturel communautaire     
-
-Manifestations sportives à Melun
-
-

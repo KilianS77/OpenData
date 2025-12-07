@@ -70,6 +70,7 @@ class DecodeApi {
     
     /**
      * Synchroniser les aires de jeux
+     * Logique simple : si existe déjà, on ignore. Sinon, on ajoute.
      */
     public static function syncAiresJeux() {
         $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/aires-de-jeux/records?limit=-1';
@@ -95,11 +96,21 @@ class DecodeApi {
         
         $db = self::initDb();
         $saved = 0;
-        $updated = 0;
         $errors = 0;
         
-        foreach ($data['results'] as $item) {
+        foreach ($data['results'] as $record) {
             try {
+                // Extraire les données
+                $item = $record['fields'] ?? $record['record']['fields'] ?? $record;
+                
+                // Normaliser les valeurs
+                $libelle = trim($item['libelle'] ?? '');
+                $adresse = trim($item['adresse'] ?? '');
+                
+                if (empty($libelle) && empty($adresse)) {
+                    continue; // Ignorer si pas de libelle ni d'adresse
+                }
+                
                 // Extraire les coordonnées
                 $lat = 48.54;
                 $lon = 2.66;
@@ -113,68 +124,52 @@ class DecodeApi {
                     }
                 }
                 
-                // Vérifier si l'aire existe déjà (basé sur libelle + adresse)
-                $stmt = $db->prepare("SELECT id FROM aires_jeux WHERE libelle = ? AND adresse = ?");
-                $stmt->execute([
-                    $item['libelle'] ?? '',
-                    $item['adresse'] ?? ''
-                ]);
+                // Vérifier si l'aire existe déjà
+                // Clé unique : libelle + adresse
+                if ($adresse) {
+                    $stmt = $db->prepare("SELECT id FROM aires_jeux WHERE libelle = ? AND adresse = ?");
+                    $stmt->execute([$libelle, $adresse]);
+                } else {
+                    $stmt = $db->prepare("SELECT id FROM aires_jeux WHERE libelle = ? AND (adresse IS NULL OR adresse = '')");
+                    $stmt->execute([$libelle]);
+                }
                 $existing = $stmt->fetch();
                 
                 if ($existing) {
-                    // Mettre à jour
-                    $stmt = $db->prepare("
-                        UPDATE aires_jeux 
-                        SET famille_eqpt = ?, public_autorise = ?, tranches_age = ?, 
-                            pmr = ?, acces_entree_pmr = ?, acces_sol_pmr = ?, acces_modules_pmr = ?,
-                            commune = ?, codeinsee = ?, latitude = ?, longitude = ?, 
-                            photo = ?, data_json = ?
-                        WHERE id = ?
-                    ");
-                    $result = $stmt->execute([
-                        $item['famille_eqpt'] ?? null,
-                        $item['public_autorise'] ?? null,
-                        $item['tranches_age'] ?? null,
-                        $item['pmr'] ?? null,
-                        $item['acces_entree_pmr'] ?? null,
-                        $item['acces_sol_pmr'] ?? null,
-                        $item['acces_modules_pmr'] ?? null,
-                        $item['commune'] ?? null,
-                        $item['codeinsee'] ?? null,
-                        $lat,
-                        $lon,
-                        $item['photo'] ?? null,
-                        json_encode($item),
-                        $existing['id']
-                    ]);
-                    if ($result) $updated++;
+                    // Existe déjà, on ignore
+                    continue;
+                }
+                
+                // N'existe pas, on ajoute
+                $stmt = $db->prepare("
+                    INSERT INTO aires_jeux 
+                    (famille_eqpt, public_autorise, libelle, tranches_age, pmr, 
+                     acces_entree_pmr, acces_sol_pmr, acces_modules_pmr, adresse, 
+                     commune, codeinsee, latitude, longitude, photo, data_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $result = $stmt->execute([
+                    trim($item['famille_eqpt'] ?? '') ?: null,
+                    trim($item['public_autorise'] ?? '') ?: null,
+                    $libelle ?: 'Nom non disponible',
+                    trim($item['tranches_age'] ?? '') ?: null,
+                    trim($item['pmr'] ?? '') ?: null,
+                    trim($item['acces_entree_pmr'] ?? '') ?: null,
+                    trim($item['acces_sol_pmr'] ?? '') ?: null,
+                    trim($item['acces_modules_pmr'] ?? '') ?: null,
+                    $adresse ?: null,
+                    trim($item['commune'] ?? '') ?: null,
+                    trim($item['codeinsee'] ?? '') ?: null,
+                    $lat,
+                    $lon,
+                    trim($item['photo'] ?? '') ?: null,
+                    json_encode($item)
+                ]);
+                
+                if ($result) {
+                    $saved++;
                 } else {
-                    // Créer
-                    $stmt = $db->prepare("
-                        INSERT INTO aires_jeux 
-                        (famille_eqpt, public_autorise, libelle, tranches_age, pmr, 
-                         acces_entree_pmr, acces_sol_pmr, acces_modules_pmr, adresse, 
-                         commune, codeinsee, latitude, longitude, photo, data_json)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $result = $stmt->execute([
-                        $item['famille_eqpt'] ?? null,
-                        $item['public_autorise'] ?? null,
-                        $item['libelle'] ?? 'Nom non disponible',
-                        $item['tranches_age'] ?? null,
-                        $item['pmr'] ?? null,
-                        $item['acces_entree_pmr'] ?? null,
-                        $item['acces_sol_pmr'] ?? null,
-                        $item['acces_modules_pmr'] ?? null,
-                        $item['adresse'] ?? null,
-                        $item['commune'] ?? null,
-                        $item['codeinsee'] ?? null,
-                        $lat,
-                        $lon,
-                        $item['photo'] ?? null,
-                        json_encode($item)
-                    ]);
-                    if ($result) $saved++;
+                    $errors++;
                 }
             } catch (Exception $e) {
                 $errors++;
@@ -182,12 +177,13 @@ class DecodeApi {
             }
         }
         
-        echo "✅ Aires de jeux: $saved créées, $updated mises à jour, $errors erreurs\n";
-        return ['success' => true, 'saved' => $saved, 'updated' => $updated, 'errors' => $errors];
+        echo "✅ Aires de jeux: $saved créées, $errors erreurs\n";
+        return ['success' => true, 'saved' => $saved, 'updated' => 0, 'errors' => $errors];
     }
     
     /**
      * Synchroniser les équipements sportifs
+     * Logique simple : si existe déjà, on ignore. Sinon, on ajoute.
      */
     public static function syncEquipementsSportifs() {
         $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/equipements-sportifs/records?limit=-1';
@@ -213,11 +209,21 @@ class DecodeApi {
         
         $db = self::initDb();
         $saved = 0;
-        $updated = 0;
         $errors = 0;
         
-        foreach ($data['results'] as $item) {
+        foreach ($data['results'] as $record) {
             try {
+                // Extraire les données
+                $item = $record['fields'] ?? $record['record']['fields'] ?? $record;
+                
+                // Normaliser les valeurs
+                $equipNom = trim($item['equip_nom'] ?? '');
+                $adresse = trim($item['adr_num_et_rue'] ?? '');
+                
+                if (empty($equipNom) && empty($adresse)) {
+                    continue; // Ignorer si pas de nom ni d'adresse
+                }
+                
                 // Extraire les coordonnées
                 $lat = 48.54;
                 $lon = 2.66;
@@ -234,56 +240,46 @@ class DecodeApi {
                     }
                 }
                 
-                // Vérifier si l'équipement existe déjà (basé sur equip_nom + adr_num_et_rue)
-                $stmt = $db->prepare("SELECT id FROM equipements_sportifs WHERE equip_nom = ? AND adr_num_et_rue = ?");
-                $stmt->execute([
-                    $item['equip_nom'] ?? '',
-                    $item['adr_num_et_rue'] ?? ''
-                ]);
+                // Vérifier si l'équipement existe déjà
+                // Clé unique : equip_nom + adr_num_et_rue
+                if ($adresse) {
+                    $stmt = $db->prepare("SELECT id FROM equipements_sportifs WHERE equip_nom = ? AND adr_num_et_rue = ?");
+                    $stmt->execute([$equipNom, $adresse]);
+                } else {
+                    $stmt = $db->prepare("SELECT id FROM equipements_sportifs WHERE equip_nom = ? AND (adr_num_et_rue IS NULL OR adr_num_et_rue = '')");
+                    $stmt->execute([$equipNom]);
+                }
                 $existing = $stmt->fetch();
                 
                 if ($existing) {
-                    // Mettre à jour
-                    $stmt = $db->prepare("
-                        UPDATE equipements_sportifs 
-                        SET equip_theme = ?, equip_type = ?, adr_codepostal = ?, 
-                            adr_commune = ?, adr_code_insee_com = ?, 
-                            latitude = ?, longitude = ?, data_json = ?
-                        WHERE id = ?
-                    ");
-                    $result = $stmt->execute([
-                        $item['equip_theme'] ?? null,
-                        $item['equip_type'] ?? null,
-                        $item['adr_codepostal'] ?? null,
-                        $item['adr_commune'] ?? null,
-                        $item['adr_code_insee_com'] ?? null,
-                        $lat,
-                        $lon,
-                        json_encode($item),
-                        $existing['id']
-                    ]);
-                    if ($result) $updated++;
+                    // Existe déjà, on ignore
+                    continue;
+                }
+                
+                // N'existe pas, on ajoute
+                $stmt = $db->prepare("
+                    INSERT INTO equipements_sportifs 
+                    (equip_theme, equip_type, equip_nom, adr_codepostal, adr_commune, 
+                     adr_code_insee_com, adr_num_et_rue, latitude, longitude, data_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $result = $stmt->execute([
+                    trim($item['equip_theme'] ?? '') ?: null,
+                    trim($item['equip_type'] ?? '') ?: null,
+                    $equipNom ?: 'Nom non disponible',
+                    trim($item['adr_codepostal'] ?? '') ?: null,
+                    trim($item['adr_commune'] ?? '') ?: null,
+                    trim($item['adr_code_insee_com'] ?? '') ?: null,
+                    $adresse ?: null,
+                    $lat,
+                    $lon,
+                    json_encode($item)
+                ]);
+                
+                if ($result) {
+                    $saved++;
                 } else {
-                    // Créer
-                    $stmt = $db->prepare("
-                        INSERT INTO equipements_sportifs 
-                        (equip_theme, equip_type, equip_nom, adr_codepostal, adr_commune, 
-                         adr_code_insee_com, adr_num_et_rue, latitude, longitude, data_json)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $result = $stmt->execute([
-                        $item['equip_theme'] ?? null,
-                        $item['equip_type'] ?? null,
-                        $item['equip_nom'] ?? 'Nom non disponible',
-                        $item['adr_codepostal'] ?? null,
-                        $item['adr_commune'] ?? null,
-                        $item['adr_code_insee_com'] ?? null,
-                        $item['adr_num_et_rue'] ?? null,
-                        $lat,
-                        $lon,
-                        json_encode($item)
-                    ]);
-                    if ($result) $saved++;
+                    $errors++;
                 }
             } catch (Exception $e) {
                 $errors++;
@@ -291,12 +287,13 @@ class DecodeApi {
             }
         }
         
-        echo "✅ Équipements sportifs: $saved créés, $updated mis à jour, $errors erreurs\n";
-        return ['success' => true, 'saved' => $saved, 'updated' => $updated, 'errors' => $errors];
+        echo "✅ Équipements sportifs: $saved créés, $errors erreurs\n";
+        return ['success' => true, 'saved' => $saved, 'updated' => 0, 'errors' => $errors];
     }
     
     /**
      * Synchroniser les manifestations sportives
+     * Logique simple : si existe déjà, on ignore. Sinon, on ajoute.
      */
     public static function syncManifestationsSportives() {
         $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/manifestations-sportives-en-2025-a-melun/records?limit=-1';
@@ -322,76 +319,86 @@ class DecodeApi {
         
         $db = self::initDb();
         $saved = 0;
-        $updated = 0;
         $errors = 0;
         
-        foreach ($data['results'] as $item) {
+        foreach ($data['results'] as $record) {
             try {
-                // Extraire les coordonnées (si disponibles dans les données)
-                $lat = null;
-                $lon = null;
-                // Les manifestations sportives n'ont pas toujours de coordonnées dans l'API
-                // On devra peut-être géocoder le lieu plus tard
+                // Extraire les données - l'API OpenData peut avoir les données dans 'fields' ou directement
+                $item = $record['fields'] ?? $record['record']['fields'] ?? $record;
+                
+                // Normaliser les valeurs
+                $manifestation = trim($item['manifestation'] ?? '');
+                if (empty($manifestation)) {
+                    continue; // Ignorer si pas de nom
+                }
                 
                 // Convertir les dates
                 $dateDebut = null;
                 $dateFin = null;
-                if (isset($item['date_debut'])) {
+                if (isset($item['date_debut']) && !empty($item['date_debut'])) {
                     $dateDebut = date('Y-m-d', strtotime($item['date_debut']));
                 }
-                if (isset($item['date_de_fin'])) {
+                if (isset($item['date_de_fin']) && !empty($item['date_de_fin'])) {
                     $dateFin = date('Y-m-d', strtotime($item['date_de_fin']));
                 }
                 
-                // Vérifier si la manifestation existe déjà (basé sur manifestation + date_debut)
-                $stmt = $db->prepare("SELECT id FROM manifestations_sportives WHERE manifestation = ? AND date_debut = ?");
-                $stmt->execute([
-                    $item['manifestation'] ?? '',
-                    $dateDebut
-                ]);
+                // Vérifier si la manifestation existe déjà
+                // Clé unique : manifestation + date_debut + lieu
+                $lieu = trim($item['lieu'] ?? '');
+                
+                if ($dateDebut) {
+                    // Si on a une date, chercher avec date
+                    if ($lieu) {
+                        $stmt = $db->prepare("SELECT id FROM manifestations_sportives WHERE manifestation = ? AND date_debut = ? AND lieu = ?");
+                        $stmt->execute([$manifestation, $dateDebut, $lieu]);
+                    } else {
+                        $stmt = $db->prepare("SELECT id FROM manifestations_sportives WHERE manifestation = ? AND date_debut = ? AND (lieu IS NULL OR lieu = '')");
+                        $stmt->execute([$manifestation, $dateDebut]);
+                    }
+                } else {
+                    // Si pas de date, chercher par nom et lieu uniquement
+                    if ($lieu) {
+                        $stmt = $db->prepare("SELECT id FROM manifestations_sportives WHERE manifestation = ? AND lieu = ? AND date_debut IS NULL");
+                        $stmt->execute([$manifestation, $lieu]);
+                    } else {
+                        $stmt = $db->prepare("SELECT id FROM manifestations_sportives WHERE manifestation = ? AND date_debut IS NULL AND (lieu IS NULL OR lieu = '')");
+                        $stmt->execute([$manifestation]);
+                    }
+                }
                 $existing = $stmt->fetch();
                 
                 if ($existing) {
-                    // Mettre à jour
-                    $stmt = $db->prepare("
-                        UPDATE manifestations_sportives 
-                        SET association_ou_service = ?, date_de_fin = ?, lieu = ?, 
-                            adresse = ?, commune = ?, latitude = ?, longitude = ?, data_json = ?
-                        WHERE id = ?
-                    ");
-                    $result = $stmt->execute([
-                        $item['association_ou_service'] ?? null,
-                        $dateFin,
-                        $item['lieu'] ?? null,
-                        null, // adresse (à géocoder si nécessaire)
-                        null, // commune (à extraire si disponible)
-                        $lat,
-                        $lon,
-                        json_encode($item),
-                        $existing['id']
-                    ]);
-                    if ($result) $updated++;
+                    // Existe déjà, on ignore
+                    continue;
+                }
+                
+                // N'existe pas, on ajoute
+                $lat = null;
+                $lon = null;
+                
+                $stmt = $db->prepare("
+                    INSERT INTO manifestations_sportives 
+                    (association_ou_service, manifestation, date_debut, date_de_fin, lieu, 
+                     adresse, commune, latitude, longitude, data_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $result = $stmt->execute([
+                    trim($item['association_ou_service'] ?? ''),
+                    $manifestation,
+                    $dateDebut,
+                    $dateFin,
+                    $lieu,
+                    null,
+                    null,
+                    $lat,
+                    $lon,
+                    json_encode($item)
+                ]);
+                
+                if ($result) {
+                    $saved++;
                 } else {
-                    // Créer
-                    $stmt = $db->prepare("
-                        INSERT INTO manifestations_sportives 
-                        (association_ou_service, manifestation, date_debut, date_de_fin, lieu, 
-                         adresse, commune, latitude, longitude, data_json)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $result = $stmt->execute([
-                        $item['association_ou_service'] ?? null,
-                        $item['manifestation'] ?? 'Nom non disponible',
-                        $dateDebut,
-                        $dateFin,
-                        $item['lieu'] ?? null,
-                        null, // adresse
-                        null, // commune
-                        $lat,
-                        $lon,
-                        json_encode($item)
-                    ]);
-                    if ($result) $saved++;
+                    $errors++;
                 }
             } catch (Exception $e) {
                 $errors++;
@@ -399,12 +406,13 @@ class DecodeApi {
             }
         }
         
-        echo "✅ Manifestations sportives: $saved créées, $updated mises à jour, $errors erreurs\n";
-        return ['success' => true, 'saved' => $saved, 'updated' => $updated, 'errors' => $errors];
+        echo "✅ Manifestations sportives: $saved créées, $errors erreurs\n";
+        return ['success' => true, 'saved' => $saved, 'updated' => 0, 'errors' => $errors];
     }
     
     /**
      * Synchroniser l'agenda culturel
+     * Logique simple : si existe déjà, on ignore. Sinon, on ajoute.
      */
     public static function syncAgendaCulturel() {
         $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/agenda-culturel-communautaire-2025-2026/records?limit=-1';
@@ -430,72 +438,90 @@ class DecodeApi {
         
         $db = self::initDb();
         $saved = 0;
-        $updated = 0;
         $errors = 0;
         
-        foreach ($data['results'] as $item) {
+        foreach ($data['results'] as $record) {
             try {
-                // Extraire les coordonnées (si disponibles dans les données)
-                $lat = null;
-                $lon = null;
-                // L'agenda culturel n'a pas toujours de coordonnées dans l'API
-                // On devra peut-être géocoder le lieu plus tard
+                // Extraire les données - l'API OpenData peut avoir les données dans 'fields' ou directement
+                $item = $record['fields'] ?? $record['record']['fields'] ?? $record;
+                
+                // Normaliser les valeurs
+                $nomSpectacle = trim($item['nom_du_spectacle'] ?? '');
+                if (empty($nomSpectacle)) {
+                    continue; // Ignorer si pas de nom
+                }
                 
                 // Convertir la date
                 $date = null;
-                if (isset($item['date'])) {
+                if (isset($item['date']) && !empty($item['date'])) {
                     $date = date('Y-m-d', strtotime($item['date']));
                 }
                 
-                // Vérifier si l'événement existe déjà (basé sur nom_du_spectacle + date + lieu)
-                $stmt = $db->prepare("SELECT id FROM agenda_culturel WHERE nom_du_spectacle = ? AND date = ? AND lieu_de_representation = ?");
-                $stmt->execute([
-                    $item['nom_du_spectacle'] ?? '',
-                    $date,
-                    $item['lieu_de_representation'] ?? ''
-                ]);
-                $existing = $stmt->fetch();
+                $lieu = trim($item['lieu_de_representation'] ?? '');
+                $horaire = trim($item['horaire'] ?? '');
+                
+                // Vérifier si l'événement existe déjà
+                // Clé unique : nom_du_spectacle + date + lieu + horaire
+                if ($date && $nomSpectacle) {
+                    if ($lieu && $horaire) {
+                        $stmt = $db->prepare("SELECT id FROM agenda_culturel WHERE nom_du_spectacle = ? AND date = ? AND lieu_de_representation = ? AND horaire = ?");
+                        $stmt->execute([$nomSpectacle, $date, $lieu, $horaire]);
+                    } elseif ($lieu) {
+                        $stmt = $db->prepare("SELECT id FROM agenda_culturel WHERE nom_du_spectacle = ? AND date = ? AND lieu_de_representation = ? AND (horaire IS NULL OR horaire = '')");
+                        $stmt->execute([$nomSpectacle, $date, $lieu]);
+                    } elseif ($horaire) {
+                        $stmt = $db->prepare("SELECT id FROM agenda_culturel WHERE nom_du_spectacle = ? AND date = ? AND (lieu_de_representation IS NULL OR lieu_de_representation = '') AND horaire = ?");
+                        $stmt->execute([$nomSpectacle, $date, $horaire]);
+                    } else {
+                        $stmt = $db->prepare("SELECT id FROM agenda_culturel WHERE nom_du_spectacle = ? AND date = ? AND (lieu_de_representation IS NULL OR lieu_de_representation = '') AND (horaire IS NULL OR horaire = '')");
+                        $stmt->execute([$nomSpectacle, $date]);
+                    }
+                } elseif ($nomSpectacle) {
+                    // Pas de date, chercher par nom uniquement
+                    $stmt = $db->prepare("SELECT id FROM agenda_culturel WHERE nom_du_spectacle = ? AND date IS NULL");
+                    $stmt->execute([$nomSpectacle]);
+                } else {
+                    $existing = false;
+                }
+                
+                if (isset($stmt)) {
+                    $existing = $stmt->fetch();
+                } else {
+                    $existing = false;
+                }
                 
                 if ($existing) {
-                    // Mettre à jour
-                    $stmt = $db->prepare("
-                        UPDATE agenda_culturel 
-                        SET horaire = ?, commune = ?, thematique = ?, 
-                            adresse = ?, latitude = ?, longitude = ?, data_json = ?
-                        WHERE id = ?
-                    ");
-                    $result = $stmt->execute([
-                        $item['horaire'] ?? null,
-                        $item['commune'] ?? null,
-                        $item['thematique'] ?? null,
-                        null, // adresse
-                        $lat,
-                        $lon,
-                        json_encode($item),
-                        $existing['id']
-                    ]);
-                    if ($result) $updated++;
+                    // Existe déjà, on ignore
+                    continue;
+                }
+                
+                // N'existe pas, on ajoute
+                $lat = null;
+                $lon = null;
+                
+                $stmt = $db->prepare("
+                    INSERT INTO agenda_culturel 
+                    (date, horaire, commune, thematique, nom_du_spectacle, lieu_de_representation, 
+                     adresse, latitude, longitude, data_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $result = $stmt->execute([
+                    $date,
+                    $horaire ?: null,
+                    trim($item['commune'] ?? '') ?: null,
+                    trim($item['thematique'] ?? '') ?: null,
+                    $nomSpectacle,
+                    $lieu ?: null,
+                    null,
+                    $lat,
+                    $lon,
+                    json_encode($item)
+                ]);
+                
+                if ($result) {
+                    $saved++;
                 } else {
-                    // Créer
-                    $stmt = $db->prepare("
-                        INSERT INTO agenda_culturel 
-                        (date, horaire, commune, thematique, nom_du_spectacle, lieu_de_representation, 
-                         adresse, latitude, longitude, data_json)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $result = $stmt->execute([
-                        $date,
-                        $item['horaire'] ?? null,
-                        $item['commune'] ?? null,
-                        $item['thematique'] ?? null,
-                        $item['nom_du_spectacle'] ?? 'Nom non disponible',
-                        $item['lieu_de_representation'] ?? null,
-                        null, // adresse
-                        $lat,
-                        $lon,
-                        json_encode($item)
-                    ]);
-                    if ($result) $saved++;
+                    $errors++;
                 }
             } catch (Exception $e) {
                 $errors++;
@@ -503,12 +529,13 @@ class DecodeApi {
             }
         }
         
-        echo "✅ Agenda culturel: $saved créés, $updated mis à jour, $errors erreurs\n";
-        return ['success' => true, 'saved' => $saved, 'updated' => $updated, 'errors' => $errors];
+        echo "✅ Agenda culturel: $saved créés, $errors erreurs\n";
+        return ['success' => true, 'saved' => $saved, 'updated' => 0, 'errors' => $errors];
     }
     
     /**
      * Synchroniser les points d'intérêt
+     * Logique simple : si existe déjà, on ignore. Sinon, on ajoute.
      */
     public static function syncPointsInterets() {
         $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/points-d-interets/records?limit=-1';
@@ -534,11 +561,21 @@ class DecodeApi {
         
         $db = self::initDb();
         $saved = 0;
-        $updated = 0;
         $errors = 0;
         
-        foreach ($data['results'] as $item) {
+        foreach ($data['results'] as $record) {
             try {
+                // Extraire les données
+                $item = $record['fields'] ?? $record['record']['fields'] ?? $record;
+                
+                // Normaliser les valeurs
+                $libelle = trim($item['libelle'] ?? '');
+                $adresse = trim($item['adresse'] ?? '');
+                
+                if (empty($libelle) && empty($adresse)) {
+                    continue; // Ignorer si pas de libelle ni d'adresse
+                }
+                
                 // Extraire les coordonnées
                 $lat = 48.54;
                 $lon = 2.66;
@@ -563,60 +600,48 @@ class DecodeApi {
                     }
                 }
                 
-                // Vérifier si le point existe déjà (basé sur libelle + adresse)
-                $stmt = $db->prepare("SELECT id FROM points_interets WHERE libelle = ? AND adresse = ?");
-                $stmt->execute([
-                    $item['libelle'] ?? '',
-                    $item['adresse'] ?? ''
-                ]);
+                // Vérifier si le point existe déjà
+                // Clé unique : libelle + adresse
+                if ($adresse) {
+                    $stmt = $db->prepare("SELECT id FROM points_interets WHERE libelle = ? AND adresse = ?");
+                    $stmt->execute([$libelle, $adresse]);
+                } else {
+                    $stmt = $db->prepare("SELECT id FROM points_interets WHERE libelle = ? AND (adresse IS NULL OR adresse = '')");
+                    $stmt->execute([$libelle]);
+                }
                 $existing = $stmt->fetch();
                 
                 if ($existing) {
-                    // Mettre à jour
-                    $stmt = $db->prepare("
-                        UPDATE points_interets 
-                        SET thematique = ?, descriptio = ?, liens_vers = ?, 
-                            photo = ?, credit_photo = ?, commune = ?, code_insee = ?, 
-                            latitude = ?, longitude = ?, data_json = ?
-                        WHERE id = ?
-                    ");
-                    $result = $stmt->execute([
-                        $item['thematique'] ?? null,
-                        $item['descriptio'] ?? null,
-                        $item['liens_vers'] ?? null,
-                        $item['photo'] ?? null,
-                        $item['credit_photo'] ?? null,
-                        $item['commune'] ?? null,
-                        $item['code_insee'] ?? null,
-                        $lat,
-                        $lon,
-                        json_encode($item),
-                        $existing['id']
-                    ]);
-                    if ($result) $updated++;
+                    // Existe déjà, on ignore
+                    continue;
+                }
+                
+                // N'existe pas, on ajoute
+                $stmt = $db->prepare("
+                    INSERT INTO points_interets 
+                    (libelle, thematique, descriptio, liens_vers, photo, credit_photo, 
+                     adresse, commune, code_insee, latitude, longitude, data_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $result = $stmt->execute([
+                    $libelle ?: 'Nom non disponible',
+                    trim($item['thematique'] ?? '') ?: null,
+                    trim($item['descriptio'] ?? '') ?: null,
+                    trim($item['liens_vers'] ?? '') ?: null,
+                    trim($item['photo'] ?? '') ?: null,
+                    trim($item['credit_photo'] ?? '') ?: null,
+                    $adresse ?: null,
+                    trim($item['commune'] ?? '') ?: null,
+                    trim($item['code_insee'] ?? '') ?: null,
+                    $lat,
+                    $lon,
+                    json_encode($item)
+                ]);
+                
+                if ($result) {
+                    $saved++;
                 } else {
-                    // Créer
-                    $stmt = $db->prepare("
-                        INSERT INTO points_interets 
-                        (libelle, thematique, descriptio, liens_vers, photo, credit_photo, 
-                         adresse, commune, code_insee, latitude, longitude, data_json)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $result = $stmt->execute([
-                        $item['libelle'] ?? 'Nom non disponible',
-                        $item['thematique'] ?? null,
-                        $item['descriptio'] ?? null,
-                        $item['liens_vers'] ?? null,
-                        $item['photo'] ?? null,
-                        $item['credit_photo'] ?? null,
-                        $item['adresse'] ?? null,
-                        $item['commune'] ?? null,
-                        $item['code_insee'] ?? null,
-                        $lat,
-                        $lon,
-                        json_encode($item)
-                    ]);
-                    if ($result) $saved++;
+                    $errors++;
                 }
             } catch (Exception $e) {
                 $errors++;
@@ -624,8 +649,8 @@ class DecodeApi {
             }
         }
         
-        echo "✅ Points d'intérêt: $saved créés, $updated mis à jour, $errors erreurs\n";
-        return ['success' => true, 'saved' => $saved, 'updated' => $updated, 'errors' => $errors];
+        echo "✅ Points d'intérêt: $saved créés, $errors erreurs\n";
+        return ['success' => true, 'saved' => $saved, 'updated' => 0, 'errors' => $errors];
     }
     
     /**
@@ -639,8 +664,8 @@ class DecodeApi {
         $resultAgenda = self::syncAgendaCulturel();
         
         echo "\n=== Résumé ===\n";
-        echo "Manifestations sportives: {$resultManifestations['saved']} créées, {$resultManifestations['updated']} mises à jour\n";
-        echo "Agenda culturel: {$resultAgenda['saved']} créés, {$resultAgenda['updated']} mis à jour\n";
+        echo "Manifestations sportives: {$resultManifestations['saved']} créées\n";
+        echo "Agenda culturel: {$resultAgenda['saved']} créés\n";
         echo "Total erreurs: " . ($resultManifestations['errors'] + $resultAgenda['errors']) . "\n";
         
         return [
@@ -663,9 +688,9 @@ class DecodeApi {
         $resultPoints = self::syncPointsInterets();
         
         echo "\n=== Résumé ===\n";
-        echo "Aires de jeux: {$resultAires['saved']} créées, {$resultAires['updated']} mises à jour\n";
-        echo "Équipements sportifs: {$resultEquipements['saved']} créés, {$resultEquipements['updated']} mis à jour\n";
-        echo "Points d'intérêt: {$resultPoints['saved']} créés, {$resultPoints['updated']} mis à jour\n";
+        echo "Aires de jeux: {$resultAires['saved']} créées\n";
+        echo "Équipements sportifs: {$resultEquipements['saved']} créés\n";
+        echo "Points d'intérêt: {$resultPoints['saved']} créés\n";
         echo "Total erreurs: " . ($resultAires['errors'] + $resultEquipements['errors'] + $resultPoints['errors']) . "\n";
         
         return [

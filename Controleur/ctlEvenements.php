@@ -6,8 +6,14 @@ require_once __DIR__ . '/../API/DecodeApi.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'sync') {
     header('Content-Type: application/json');
     
+    // Démarrer un buffer de sortie pour capturer les echo de syncEvenements
+    ob_start();
+    
     // Utiliser DecodeApi pour synchroniser uniquement les événements
     $result = DecodeApi::syncEvenements();
+    
+    // Nettoyer le buffer de sortie (supprime tous les echo)
+    ob_clean();
     
     echo json_encode([
         'success' => $result['success'],

@@ -1,10 +1,10 @@
-<div class="min-h-screen bg-white p-6">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-white p-6">
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white border border-red-500 p-8">
-            <h1 class="text-2xl font-light text-gray-900 mb-6 tracking-tight">Participer à une activité</h1>
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-6 tracking-tight">Participer à une activité</h1>
             
             <?php if (isset($_SESSION['error'])): ?>
-                <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm">
+                <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-sm shadow-sm">
                     <?php 
                     echo $_SESSION['error'];
                     unset($_SESSION['error']);
@@ -19,7 +19,7 @@
             ?>
             
             <?php if (isset($_SESSION['success'])): ?>
-                <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 text-sm">
+                <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg text-green-700 text-sm shadow-sm">
                     <?php 
                     echo $_SESSION['success'];
                     unset($_SESSION['success']);
@@ -27,10 +27,10 @@
                 </div>
             <?php endif; ?>
             
-            <div class="mb-6 p-4 bg-gray-50 border border-gray-200">
-                <h2 class="text-lg font-light text-gray-900 mb-2"><?php echo htmlspecialchars($activityName ?: $activityDescription); ?></h2>
+            <div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-2"><?php echo htmlspecialchars($activityName ?: $activityDescription); ?></h2>
                 <?php if ($activityAddress): ?>
-                    <p class="text-sm text-gray-600 font-light"><?php echo htmlspecialchars($activityAddress); ?></p>
+                    <p class="text-sm text-gray-600 font-light">📍 <?php echo htmlspecialchars($activityAddress); ?></p>
                 <?php endif; ?>
             </div>
             
@@ -41,7 +41,7 @@
                 
                 <!-- Date de présence (obligatoire) -->
                 <div>
-                    <label for="date_presence" class="block text-sm font-light text-gray-700 mb-2">
+                    <label for="date_presence" class="block text-sm font-semibold text-gray-700 mb-2">
                         Date de présence <span class="text-red-500">*</span>
                     </label>
                     <input 
@@ -51,14 +51,14 @@
                         required
                         min="<?php echo date('Y-m-d'); ?>"
                         value="<?php echo isset($formData['date_presence']) ? htmlspecialchars($formData['date_presence']) : ''; ?>"
-                        class="w-full px-4 py-2 border border-gray-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-sm font-light"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 text-sm transition-all duration-200"
                     >
                     <p class="mt-1 text-xs text-gray-500 font-light">La date ne peut pas être antérieure à aujourd'hui</p>
                 </div>
                 
                 <!-- Heure de présence (facultative) -->
                 <div>
-                    <label for="heure_presence" class="block text-sm font-light text-gray-700 mb-2">
+                    <label for="heure_presence" class="block text-sm font-semibold text-gray-700 mb-2">
                         Heure de présence (facultatif)
                     </label>
                     <input 
@@ -66,7 +66,7 @@
                         id="heure_presence" 
                         name="heure_presence"
                         value="<?php echo isset($formData['heure_presence']) ? htmlspecialchars($formData['heure_presence']) : ''; ?>"
-                        class="w-full px-4 py-2 border border-gray-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-sm font-light"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 text-sm transition-all duration-200"
                     >
                     <p class="mt-1 text-xs text-gray-500 font-light">Si la date est aujourd'hui, l'heure ne peut pas être passée</p>
                 </div>
@@ -74,13 +74,13 @@
                 <div class="flex space-x-4 pt-4">
                     <button 
                         type="submit" 
-                        class="flex-1 px-6 py-2 bg-red-500 text-white font-light hover:bg-red-600 transition-colors"
+                        class="flex-1 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                     >
                         Confirmer la participation
                     </button>
                     <a 
                         href="index.php?ctl=map" 
-                        class="flex-1 px-6 py-2 bg-white border border-red-500 text-red-500 font-light hover:bg-red-500 hover:text-white transition-colors text-center"
+                        class="flex-1 px-6 py-3 bg-white border-2 border-red-500 text-red-500 font-semibold rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 text-center shadow-sm hover:shadow-md"
                     >
                         Annuler
                     </a>

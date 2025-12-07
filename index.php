@@ -1,13 +1,16 @@
 <?php
 session_start();
 
-// Vérifier si c'est une requête AJAX (pour les paramètres et activités)
+// Vérifier si c'est une requête AJAX (pour les paramètres, activités et événements)
 $isAjaxRequest = (
     (isset($_GET['ctl']) && $_GET['ctl'] === 'parametres' && 
      isset($_GET['action']) && $_GET['action'] === 'update_setting' &&
      $_SERVER['REQUEST_METHOD'] === 'POST') ||
     (isset($_GET['ctl']) && $_GET['ctl'] === 'activity' && 
-     ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['action']) && $_GET['action'] === 'get_activities')))
+     ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['action']) && $_GET['action'] === 'get_activities'))) ||
+    (isset($_GET['ctl']) && $_GET['ctl'] === 'evenements' && 
+     isset($_GET['action']) && $_GET['action'] === 'sync' &&
+     $_SERVER['REQUEST_METHOD'] === 'POST')
 );
 
 // Ne pas inclure l'entête et le footer pour les requêtes AJAX
@@ -37,7 +40,7 @@ if (isset($_GET['ctl'])) {
             break;
         
         case 'participation':
-            include 'Controleur/ctlParticipation.php';
+            require_once __DIR__ . '/Controleur/ctlParticipation.php';
             break;
 
         case 'parametres':

@@ -533,6 +533,23 @@ switch ($action) {
         exit();
         break;
     
+    case 'participations_autres':
+        // Afficher les participations des autres utilisateurs
+        require_once __DIR__ . '/../Model/SettingsModel.php';
+        
+        // Récupérer les paramètres de l'utilisateur
+        $settings = SettingsModel::getSettings($userId);
+        $viewMode = $settings['view_participations'] ?? 'friends_only';
+        
+        // Récupérer les participations selon les paramètres
+        $participations = ParticipationModel::getOtherUsersParticipations($userId, $viewMode);
+        
+        // Passer les variables à la vue
+        $viewMode = $viewMode; // Pour la vue
+        
+        include __DIR__ . '/../Vue/vueParticipation/v_participations_autres.php';
+        break;
+    
     default:
         header('Location: index.php?ctl=participation&action=mes_participations');
         exit();

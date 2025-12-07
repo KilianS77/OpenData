@@ -2,9 +2,9 @@
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
             <div class="flex items-center justify-between mb-6">
-                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Mes participations</h1>
-                <a href="index.php?ctl=map" class="px-6 py-3 text-sm font-semibold text-red-500 border-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md">
-                    Voir la carte
+                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Participations des autres</h1>
+                <a href="index.php?ctl=participation&action=mes_participations" class="px-6 py-3 text-sm font-semibold text-red-500 border-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md">
+                    Mes participations
                 </a>
             </div>
             
@@ -28,10 +28,21 @@
             
             <?php if (empty($participations)): ?>
                 <div class="text-center py-12 bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <p class="text-gray-500 font-light mb-4">Vous n'avez aucune participation pour le moment</p>
-                    <a href="index.php?ctl=map" class="inline-block px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
-                        Découvrir les activités
-                    </a>
+                    <p class="text-gray-500 font-light mb-4">Aucune participation à afficher pour le moment</p>
+                    <p class="text-sm text-gray-400 font-light mb-4">
+                        <?php 
+                        if ($viewMode === 'friends_only') {
+                            echo 'Vous ne voyez que les participations de vos amis.';
+                        } else {
+                            echo 'Aucun utilisateur n\'a partagé ses participations publiquement pour le moment.';
+                        }
+                        ?>
+                    </p>
+                    <?php if ($viewMode === 'friends_only'): ?>
+                        <a href="index.php?ctl=parametres&action=afficher_parametres" class="inline-block px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                            Modifier mes paramètres
+                        </a>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <div class="space-y-4">
@@ -39,6 +50,17 @@
                         <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-200">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
+                                    <!-- Informations de l'utilisateur -->
+                                    <div class="mb-3">
+                                        <p class="text-sm font-semibold text-gray-900">
+                                            👤 <?php echo htmlspecialchars($participation['user_name']); ?>
+                                        </p>
+                                        <p class="text-xs text-gray-500 font-light">
+                                            <?php echo htmlspecialchars($participation['user_email']); ?>
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Informations de l'activité -->
                                     <h3 class="text-lg font-bold text-gray-900 mb-2">
                                         <?php echo htmlspecialchars($participation['activity_name'] ?? $participation['activity_description']); ?>
                                     </h3>
@@ -48,6 +70,7 @@
                                         </p>
                                     <?php endif; ?>
                                     
+                                    <!-- Date et heure -->
                                     <div class="flex items-center space-x-4 text-sm text-gray-500 font-light">
                                         <?php if ($participation['date_presence']): ?>
                                             <span class="flex items-center gap-1">
@@ -66,16 +89,6 @@
                                         </span>
                                     </div>
                                 </div>
-                                
-                                <div class="ml-4">
-                                    <a 
-                                        href="index.php?ctl=participation&action=supprimer&id=<?php echo $participation['id']; ?>" 
-                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette participation ?');"
-                                        class="px-4 py-2 text-sm font-semibold text-red-500 border-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
-                                    >
-                                        Supprimer
-                                    </a>
-                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -84,6 +97,4 @@
         </div>
     </div>
 </div>
-
-
 

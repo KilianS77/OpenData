@@ -161,5 +161,102 @@ class ParticipationModel {
             return false;
         }
     }
+    
+    /**
+     * Récupérer les participations des autres utilisateurs selon les paramètres
+     * @param int $viewerUserId L'ID de l'utilisateur qui consulte
+     * @param string $viewMode 'public' ou 'friends_only' selon les paramètres de l'utilisateur
+     * @return array Liste des participations avec les informations des utilisateurs
+     */
+    public static function getOtherUsersParticipations($viewerUserId, $viewMode) {
+        try {
+            $db = MySqlDb::getPdoDb();
+            
+            if ($viewMode === 'friends_only') {
+                // Récupérer uniquement les participations des amis
+                $stmt = $db->prepare("
+                    SELECT p.*, 
+                           u.id as user_id,
+                           u.name as user_name,
+                           u.email as user_email,
+                           CASE 
+                               WHEN p.activity_type = 'aires_jeux' THEN aj.libelle
+                               WHEN p.activity_type = 'equipements_sportifs' THEN es.equip_nom
+                               WHEN p.activity_type = 'manifestations_sportives' THEN ms.manifestation
+                               WHEN p.activity_type = 'agenda_culturel' THEN ac.nom_du_spectacle
+                               WHEN p.activity_type = 'points_interets' THEN pi.libelle
+                               ELSE 'Activité inconnue'
+                           END as activity_name,
+                           CASE 
+                               WHEN p.activity_type = 'aires_jeux' THEN aj.adresse
+                               WHEN p.activity_type = 'equipements_sportifs' THEN es.adr_num_et_rue
+                               WHEN p.activity_type = 'manifestations_sportives' THEN ms.lieu
+                               WHEN p.activity_type = 'agenda_culturel' THEN ac.lieu_de_representation
+                               WHEN p.activity_type = 'points_interets' THEN pi.adresse
+                               ELSE ''
+                           END as activity_address
+                    FROM participations p
+                    INNER JOIN users u ON p.user_id = u.id
+                    INNER JOIN user_settings us ON u.id = us.user_id
+                    INNER JOIN friends f ON (
+                        (f.user_id = :viewerid AND f.friend_id = u.id) OR
+                        (f.friend_id = :viewerid AND f.user_id = u.id)
+                    )
+                    LEFT JOIN aires_jeux aj ON p.activity_type = 'aires_jeux' AND p.activity_id = aj.id
+                    LEFT JOIN equipements_sportifs es ON p.activity_type = 'equipements_sportifs' AND p.activity_id = es.id
+                    LEFT JOIN manifestations_sportives ms ON p.activity_type = 'manifestations_sportives' AND p.activity_id = ms.id
+                    LEFT JOIN agenda_culturel ac ON p.activity_type = 'agenda_culturel' AND p.activity_id = ac.id
+                    LEFT JOIN points_interets pi ON p.activity_type = 'points_interets' AND p.activity_id = pi.id
+                    WHERE p.user_id != :viewerid
+                    AND f.status = 'accepted'
+                    AND (us.participation_visibility = 'public' OR us.participation_visibility = 'friends_only')
+                    ORDER BY p.date_presence DESC, p.heure_presence DESC
+                ");
+                $stmt->bindParam(':viewerid', $viewerUserId, PDO::PARAM_INT);
+            } else {
+                // Récupérer toutes les participations publiques
+                $stmt = $db->prepare("
+                    SELECT p.*, 
+                           u.id as user_id,
+                           u.name as user_name,
+                           u.email as user_email,
+                           CASE 
+                               WHEN p.activity_type = 'aires_jeux' THEN aj.libelle
+                               WHEN p.activity_type = 'equipements_sportifs' THEN es.equip_nom
+                               WHEN p.activity_type = 'manifestations_sportives' THEN ms.manifestation
+                               WHEN p.activity_type = 'agenda_culturel' THEN ac.nom_du_spectacle
+                               WHEN p.activity_type = 'points_interets' THEN pi.libelle
+                               ELSE 'Activité inconnue'
+                           END as activity_name,
+                           CASE 
+                               WHEN p.activity_type = 'aires_jeux' THEN aj.adresse
+                               WHEN p.activity_type = 'equipements_sportifs' THEN es.adr_num_et_rue
+                               WHEN p.activity_type = 'manifestations_sportives' THEN ms.lieu
+                               WHEN p.activity_type = 'agenda_culturel' THEN ac.lieu_de_representation
+                               WHEN p.activity_type = 'points_interets' THEN pi.adresse
+                               ELSE ''
+                           END as activity_address
+                    FROM participations p
+                    INNER JOIN users u ON p.user_id = u.id
+                    INNER JOIN user_settings us ON u.id = us.user_id
+                    LEFT JOIN aires_jeux aj ON p.activity_type = 'aires_jeux' AND p.activity_id = aj.id
+                    LEFT JOIN equipements_sportifs es ON p.activity_type = 'equipements_sportifs' AND p.activity_id = es.id
+                    LEFT JOIN manifestations_sportives ms ON p.activity_type = 'manifestations_sportives' AND p.activity_id = ms.id
+                    LEFT JOIN agenda_culturel ac ON p.activity_type = 'agenda_culturel' AND p.activity_id = ac.id
+                    LEFT JOIN points_interets pi ON p.activity_type = 'points_interets' AND p.activity_id = pi.id
+                    WHERE p.user_id != :viewerid
+                    AND us.participation_visibility = 'public'
+                    ORDER BY p.date_presence DESC, p.heure_presence DESC
+                ");
+                $stmt->bindParam(':viewerid', $viewerUserId, PDO::PARAM_INT);
+            }
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Erreur getOtherUsersParticipations: " . $e->getMessage());
+            return [];
+        }
+    }
 }
 ?>
