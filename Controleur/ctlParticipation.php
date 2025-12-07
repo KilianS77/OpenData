@@ -550,6 +550,93 @@ switch ($action) {
         include __DIR__ . '/../Vue/vueParticipation/v_participations_autres.php';
         break;
     
+    case 'envoyer_invitation':
+        // Envoyer une invitation à un ami
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            
+            require_once __DIR__ . '/../Model/InvitationModel.php';
+            
+            $toUserId = $_POST['to_user_id'] ?? null;
+            $activityType = $_POST['activity_type'] ?? '';
+            $activityId = $_POST['activity_id'] ?? '';
+            $datePresence = $_POST['date_presence'] ?? '';
+            $heurePresence = $_POST['heure_presence'] ?? '';
+            $message = $_POST['message'] ?? null;
+            
+            if (!$toUserId || !$activityType || !$activityId || !$datePresence) {
+                echo json_encode(['success' => false, 'error' => 'Données manquantes']);
+                exit();
+            }
+            
+            $result = InvitationModel::sendInvitation(
+                $userId,
+                $toUserId,
+                $activityType,
+                $activityId,
+                $datePresence,
+                $heurePresence ?: null,
+                $message
+            );
+            
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Impossible d\'envoyer l\'invitation']);
+            }
+        } else {
+            header('Location: index.php?ctl=participation&action=mes_participations');
+        }
+        exit();
+        break;
+    
+    case 'mes_invitations':
+        // Afficher les invitations reçues
+        require_once __DIR__ . '/../Model/InvitationModel.php';
+        $invitations = InvitationModel::getReceivedInvitations($userId);
+        include __DIR__ . '/../Vue/vueParticipation/v_mes_invitations.php';
+        break;
+    
+    case 'accepter_invitation':
+        // Accepter une invitation
+        require_once __DIR__ . '/../Model/InvitationModel.php';
+        
+        $invitationId = $_GET['id'] ?? null;
+        
+        if ($invitationId) {
+            $result = InvitationModel::acceptInvitation($invitationId, $userId);
+            if ($result === true) {
+                $_SESSION['success'] = 'Invitation acceptée ! La participation a été ajoutée à votre liste.';
+            } elseif ($result === 'already_participates') {
+                $_SESSION['error'] = 'Vous participez déjà à cette activité pour cette date. L\'invitation a été marquée comme acceptée.';
+            } else {
+                $_SESSION['error'] = 'Erreur lors de l\'acceptation ou invitation expirée';
+            }
+        }
+        
+        header('Location: index.php?ctl=participation&action=mes_invitations');
+        exit();
+        break;
+    
+    case 'refuser_invitation':
+        // Refuser une invitation
+        require_once __DIR__ . '/../Model/InvitationModel.php';
+        
+        $invitationId = $_GET['id'] ?? null;
+        
+        if ($invitationId) {
+            $result = InvitationModel::declineInvitation($invitationId, $userId);
+            if ($result) {
+                $_SESSION['success'] = 'Invitation refusée';
+            } else {
+                $_SESSION['error'] = 'Erreur lors du refus';
+            }
+        }
+        
+        header('Location: index.php?ctl=participation&action=mes_invitations');
+        exit();
+        break;
+    
     default:
         header('Location: index.php?ctl=participation&action=mes_participations');
         exit();

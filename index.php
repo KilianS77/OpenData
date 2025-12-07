@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Vérifier si c'est une requête AJAX (pour les paramètres, activités et événements)
+// Vérifier si c'est une requête AJAX (pour les paramètres, activités, événements et amis)
 $isAjaxRequest = (
     (isset($_GET['ctl']) && $_GET['ctl'] === 'parametres' && 
      isset($_GET['action']) && $_GET['action'] === 'update_setting' &&
@@ -10,6 +10,11 @@ $isAjaxRequest = (
      ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['action']) && $_GET['action'] === 'get_activities'))) ||
     (isset($_GET['ctl']) && $_GET['ctl'] === 'evenements' && 
      isset($_GET['action']) && $_GET['action'] === 'sync' &&
+     $_SERVER['REQUEST_METHOD'] === 'POST') ||
+    (isset($_GET['ctl']) && $_GET['ctl'] === 'amis' && 
+     isset($_GET['action']) && $_GET['action'] === 'get_friends_json') ||
+    (isset($_GET['ctl']) && $_GET['ctl'] === 'participation' && 
+     isset($_GET['action']) && $_GET['action'] === 'envoyer_invitation' &&
      $_SERVER['REQUEST_METHOD'] === 'POST')
 );
 

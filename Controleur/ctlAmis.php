@@ -139,6 +139,17 @@ switch ($action) {
         exit();
         break;
     
+    case 'get_friends_json':
+        // Retourner la liste des amis en JSON
+        header('Content-Type: application/json');
+        $friends = FriendModel::getFriends($userId);
+        echo json_encode([
+            'success' => true,
+            'friends' => $friends
+        ]);
+        exit();
+        break;
+    
     default:
         header('Location: index.php?ctl=amis&action=liste');
         exit();

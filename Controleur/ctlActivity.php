@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         $now = new DateTime();
         
         // Récupérer les aires de jeux
-        $stmt = $db->query("SELECT id, libelle as name, adresse as address, commune, latitude, longitude, famille_eqpt as description FROM aires_jeux");
+        $stmt = $db->query("SELECT id, libelle as name, adresse as address, commune, latitude, longitude, famille_eqpt as description, photo FROM aires_jeux");
         $aires = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($aires as $aire) {
             if ($aire['latitude'] && $aire['longitude']) {
@@ -48,13 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                     'lat' => floatval($aire['latitude']),
                     'lon' => floatval($aire['longitude']),
                     'description' => $aire['description'] ?? '',
+                    'photo' => $aire['photo'] ?? null,
                     'participants' => [] // Initialiser la liste des participants
                 ];
             }
         }
         
         // Récupérer les équipements sportifs
-        $stmt = $db->query("SELECT id, equip_nom as name, adr_num_et_rue as address, adr_commune as commune, latitude, longitude, equip_type as description FROM equipements_sportifs");
+        $stmt = $db->query("SELECT id, equip_nom as name, adr_num_et_rue as address, adr_commune as commune, latitude, longitude, equip_type as description, NULL as photo FROM equipements_sportifs");
         $equipements = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($equipements as $equip) {
             if ($equip['latitude'] && $equip['longitude']) {
@@ -67,13 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                     'lat' => floatval($equip['latitude']),
                     'lon' => floatval($equip['longitude']),
                     'description' => $equip['description'] ?? '',
+                    'photo' => null, // Les équipements sportifs n'ont pas de photo
                     'participants' => [] // Initialiser la liste des participants
                 ];
             }
         }
         
         // Récupérer les points d'intérêt
-        $stmt = $db->query("SELECT id, libelle as name, adresse as address, commune, latitude, longitude, thematique as description FROM points_interets");
+        $stmt = $db->query("SELECT id, libelle as name, adresse as address, commune, latitude, longitude, thematique as description, photo, credit_photo FROM points_interets");
         $points = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($points as $point) {
             if ($point['latitude'] && $point['longitude']) {
@@ -86,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                     'lat' => floatval($point['latitude']),
                     'lon' => floatval($point['longitude']),
                     'description' => $point['description'] ?? '',
+                    'photo' => $point['photo'] ?? null,
+                    'credit_photo' => $point['credit_photo'] ?? null,
                     'participants' => []
                 ];
             }

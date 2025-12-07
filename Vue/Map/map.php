@@ -352,16 +352,14 @@ function displayMarkers() {
             }).addTo(map);
 
             const canParticipate = isConnected;
-            const participantsCount = isConnected ? (activity.participants ? activity.participants.length : 0) : '?';
 
             const popupContent = `
                 <div class="p-3">
                     <h3 class="font-light text-base mb-2 text-gray-900">${activity.name}</h3>
                     <p class="text-xs text-gray-600 mb-2 font-light">${activity.address || activity.commune || ''}${activity.commune && activity.address ? ', ' + activity.commune : ''}</p>
                     <p class="text-xs text-gray-500 mb-3 font-light">${activity.description || ''}</p>
-                    ${canParticipate ? `<p class="text-xs text-red-500 mb-2 font-light">${participantsCount} participant(s)</p>` : ''}
                     <div class="flex space-x-2 pt-2 border-t border-gray-200">
-                        <button onclick="showActivityDetails('${activity.id}')" 
+                        <button onclick="window.showActivityDetails('${activity.type}', ${activity.id})" 
                                 class="px-3 py-1.5 bg-white border-2 border-red-500 text-red-500 text-xs font-semibold rounded-lg hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md transition-all duration-200">
                             Détails
                         </button>
@@ -388,13 +386,17 @@ function displayMarkers() {
 // Fonction pour afficher la liste des activités
 function displayActivities() {
     const listContainer = document.getElementById('activitiesList');
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    
+    const searchTerm = (searchInput.value || '').toLowerCase();
 
-    const filteredActivities = activities.filter(activity => 
-        activity.name.toLowerCase().includes(searchTerm) ||
-        activity.address.toLowerCase().includes(searchTerm) ||
-        activity.description.toLowerCase().includes(searchTerm)
-    );
+    const filteredActivities = activities.filter(activity => {
+        const name = (activity.name || '').toLowerCase();
+        const address = (activity.address || '').toLowerCase();
+        const description = (activity.description || '').toLowerCase();
+        return name.includes(searchTerm) || address.includes(searchTerm) || description.includes(searchTerm);
+    });
 
     if (filteredActivities.length === 0) {
         listContainer.innerHTML = '<div class="text-center text-gray-500 py-8"><p class="text-sm font-light">Aucune activité trouvée</p></div>';
@@ -403,11 +405,10 @@ function displayActivities() {
 
     listContainer.innerHTML = filteredActivities.map(activity => {
         const canParticipate = isConnected;
-        const participantsCount = isConnected ? (activity.participants ? activity.participants.length : 0) : '?';
         
         return `
         <div class="bg-white border border-gray-200 p-4 hover:border-red-500 transition-colors cursor-pointer" 
-             onclick="showActivityDetails('${activity.id}')">
+             onclick="window.showActivityDetails('${activity.type}', ${activity.id})">
             <div class="flex justify-between items-start mb-3">
                 <h3 class="font-semibold text-gray-900 text-sm">${activity.name}</h3>
                 <span class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
@@ -418,10 +419,7 @@ function displayActivities() {
             </div>
             <p class="text-xs text-gray-600 mb-2 font-light">${activity.address}</p>
             <p class="text-xs text-gray-500 mb-3 font-light">${activity.description}</p>
-            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                <span class="text-xs text-gray-500 font-light">
-                    ${canParticipate ? `${participantsCount !== '?' ? participantsCount : 0} participant${participantsCount !== '?' && participantsCount > 1 ? 's' : ''}` : 'Connectez-vous pour voir les participants'}
-                </span>
+            <div class="flex items-center justify-end pt-2 border-t border-gray-100">
                 ${canParticipate ? `
                 <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
                         onclick="event.stopPropagation();"
@@ -435,26 +433,67 @@ function displayActivities() {
     }).join('');
 }
 
-// Fonction pour afficher les détails d'une activité
-function showActivityDetails(activityId) {
-    const activity = activities.find(a => a.id === activityId);
-    if (!activity) return;
+// Fonction pour afficher les détails d'une activité (accessible globalement)
+window.showActivityDetails = function(activityType, activityId) {
+    console.log('showActivityDetails appelé avec Type:', activityType, 'ID:', activityId);
+    console.log('Activités disponibles:', activities.length);
+    
+    // Convertir l'ID en nombre si nécessaire pour la comparaison
+    const idToFind = typeof activityId === 'string' ? parseInt(activityId) : activityId;
+    
+    // Rechercher par type ET ID pour éviter les conflits entre tables
+    const activity = activities.find(a => {
+        const aId = typeof a.id === 'string' ? parseInt(a.id) : a.id;
+        return a.type === activityType && (aId === idToFind || a.id == activityId);
+    });
+    
+    console.log('Activité trouvée:', activity);
+    
+    if (!activity) {
+        console.error('Activité non trouvée pour Type:', activityType, 'ID:', activityId);
+        console.log('Activités disponibles:', activities.map(a => ({type: a.type, id: a.id, name: a.name})));
+        alert('Activité non trouvée');
+        return;
+    }
 
     const canParticipate = isConnected;
-    const canSeeParticipants = isConnected;
-    const canInvite = isConnected;
 
+    // Fermer les modales existantes
+    const existingModals = document.querySelectorAll('.activity-modal');
+    existingModals.forEach(m => m.remove());
+    
     const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center activity-modal';
     modal.style.zIndex = '99999';
+    
+    // Fermer la modale en cliquant sur le fond
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Préparer l'affichage de l'image si disponible
+    const imageSection = activity.photo && activity.photo.trim() !== '' ? `
+        <div class="mb-6" id="image-container">
+            <img src="${activity.photo}" 
+                 alt="${activity.name}" 
+                 class="w-full h-64 object-cover rounded-xl shadow-lg border border-gray-200"
+                 onerror="const container = document.getElementById('image-container'); if(container) container.style.display='none';">
+            ${activity.credit_photo ? `<p class="text-xs text-gray-500 mt-2 font-light text-right" id="credit-photo">${activity.credit_photo}</p>` : ''}
+        </div>
+    ` : '';
+    
     modal.innerHTML = `
         <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-8">
                 <div class="flex justify-between items-start mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 tracking-tight">${activity.name}</h2>
-                    <button onclick="this.closest('.fixed').remove()" 
+                    <button onclick="this.closest('.activity-modal').remove()" 
                             class="text-gray-400 hover:text-gray-600 text-2xl font-light hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
                 </div>
+                
+                ${imageSection}
                 
                 <div class="space-y-6">
                     <div class="border-b border-gray-200 pb-4">
@@ -464,22 +503,8 @@ function showActivityDetails(activityId) {
                     
                     <div class="border-b border-gray-200 pb-4">
                         <h3 class="font-semibold text-sm text-gray-700 mb-2 tracking-wide">📝 Description</h3>
-                        <p class="text-sm text-gray-600 font-light">${activity.description}</p>
+                        <p class="text-sm text-gray-600 font-light">${activity.description || 'Aucune description disponible'}</p>
                     </div>
-                    
-                    ${canSeeParticipants ? `
-                    <div class="border-b border-gray-200 pb-4">
-                        <h3 class="font-semibold text-sm text-gray-700 mb-3 tracking-wide">👥 Participants (${activity.participants ? activity.participants.length : 0})</h3>
-                        <div class="space-y-2">
-                            ${activity.participants && activity.participants.length > 0 ? activity.participants.map(p => `
-                                <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm">
-                                    <span class="text-sm font-medium text-gray-700">${p.name}</span>
-                                    ${p.date ? `<span class="text-xs text-gray-500 font-light">${p.date}</span>` : ''}
-                                </div>
-                            `).join('') : '<p class="text-sm text-gray-500 font-light">Aucun participant pour le moment</p>'}
-                        </div>
-                    </div>
-                    ` : '<p class="text-sm text-gray-500 font-light border-b border-gray-200 pb-4">Connectez-vous pour voir les participants</p>'}
                     
                     ${canParticipate ? `
                     <div class="flex space-x-3 pt-4">
@@ -487,12 +512,6 @@ function showActivityDetails(activityId) {
                                 class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-center">
                             Je participe
                         </a>
-                        ${canInvite ? `
-                        <a href="index.php?ctl=participation&action=inviter&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}" 
-                                class="flex-1 px-4 py-2 bg-white border-2 border-red-500 text-red-500 font-semibold rounded-lg hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md transition-all duration-200 text-center">
-                            Inviter des amis
-                        </a>
-                        ` : ''}
                     </div>
                     ` : ''}
                 </div>
@@ -502,7 +521,7 @@ function showActivityDetails(activityId) {
     
     document.body.appendChild(modal);
     map.setView([activity.lat, activity.lon], 15);
-}
+};
 
 // Les fonctions participateActivity et inviteFriends ont été supprimées
 // Redirection vers les pages dédiées via les liens dans les popups et modales

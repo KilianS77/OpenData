@@ -1,11 +1,8 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-white p-6">
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-            <div class="flex items-center justify-between mb-6">
+            <div class="mb-6">
                 <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Participations des autres</h1>
-                <a href="index.php?ctl=participation&action=mes_participations" class="px-6 py-3 text-sm font-semibold text-red-500 border-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md">
-                    Mes participations
-                </a>
             </div>
             
             <?php if (isset($_SESSION['error'])): ?>

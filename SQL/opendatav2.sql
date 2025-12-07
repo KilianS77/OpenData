@@ -272,6 +272,8 @@ CREATE TABLE IF NOT EXISTS `invitations` (
   `to_user_id` int NOT NULL,
   `activity_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Type d''activité: aires_jeux, equipements_sportifs, etc.',
   `activity_id` int NOT NULL COMMENT 'ID de l''activité dans la table correspondante',
+  `date_presence` date DEFAULT NULL,
+  `heure_presence` time DEFAULT NULL,
   `message` text COLLATE utf8mb4_unicode_ci,
   `status` enum('pending','accepted','declined') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
