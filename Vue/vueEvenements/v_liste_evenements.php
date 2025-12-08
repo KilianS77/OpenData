@@ -1,9 +1,23 @@
+<?php
+// Définir les gradients pour les cartes d'événements (disponible dans toutes les sections)
+$gradients = [
+    'from-red-500 to-orange-500',
+    'from-blue-500 to-purple-500',
+    'from-green-500 to-teal-500',
+    'from-pink-500 to-rose-500',
+    'from-indigo-500 to-blue-500',
+    'from-yellow-500 to-orange-500'
+];
+?>
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-white p-6">
     <div class="max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Événements</h1>
-            <button id="refreshBtn" type="button" class="px-6 py-3 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
-                🔄 Actualiser
+            <button id="refreshBtn" type="button" class="px-6 py-3 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 hover-lift ripple flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Actualiser</span>
             </button>
         </div>
         
@@ -22,23 +36,40 @@
                 </div>
             <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <?php foreach ($activitesDuJour as $activite): ?>
-                        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-200">
-                            <div class="mb-4">
-                                <span class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
-                                    <?php 
-                                    if ($activite['type'] === 'manifestations_sportives') {
-                                        echo 'Manifestation sportive';
-                                    } else {
-                                        echo 'Événement culturel';
-                                    }
-                                    ?>
-                                </span>
+                    <?php 
+                    $cardIndex = 0;
+                    foreach ($activitesDuJour as $activite): 
+                        $isSport = $activite['type'] === 'manifestations_sportives';
+                        $gradient = $gradients[$cardIndex % count($gradients)];
+                        $cardIndex++;
+                    ?>
+                        <div class="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 card-hover card-animate observe-on-scroll transform hover:scale-105">
+                            <!-- Header avec gradient -->
+                            <div class="bg-gradient-to-r <?php echo $gradient; ?> p-4 text-white relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                                <div class="relative z-10 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <?php if ($isSport): ?>
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                            </svg>
+                                        <?php else: ?>
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                                            </svg>
+                                        <?php endif; ?>
+                                        <span class="text-sm font-bold uppercase tracking-wide">
+                                            <?php echo $isSport ? 'Sport' : 'Culture'; ?>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <h3 class="text-lg font-bold text-gray-900 mb-3">
-                                <?php echo htmlspecialchars($activite['manifestation'] ?? $activite['nom_du_spectacle'] ?? 'Sans titre'); ?>
-                            </h3>
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors line-clamp-2">
+                                    <?php echo htmlspecialchars($activite['manifestation'] ?? $activite['nom_du_spectacle'] ?? 'Sans titre'); ?>
+                                </h3>
                             
                             <?php if ($activite['type'] === 'manifestations_sportives'): ?>
                                 <?php if ($activite['date_debut'] && $activite['date_de_fin']): ?>
@@ -53,8 +84,12 @@
                                 <?php endif; ?>
                                 
                                 <?php if ($activite['lieu']): ?>
-                                    <p class="text-sm text-gray-600 mb-2 font-light">
-                                        📍 <?php echo htmlspecialchars($activite['lieu']); ?>
+                                    <p class="text-sm text-gray-600 mb-2 font-light flex items-center space-x-2">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span><?php echo htmlspecialchars($activite['lieu']); ?></span>
                                     </p>
                                 <?php endif; ?>
                                 
@@ -80,8 +115,12 @@
                                 <?php endif; ?>
                                 
                                 <?php if ($activite['lieu_de_representation']): ?>
-                                    <p class="text-sm text-gray-600 mb-2 font-light">
-                                        📍 <?php echo htmlspecialchars($activite['lieu_de_representation']); ?>
+                                    <p class="text-sm text-gray-600 mb-2 font-light flex items-center space-x-2">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span><?php echo htmlspecialchars($activite['lieu_de_representation']); ?></span>
                                     </p>
                                 <?php endif; ?>
                                 
@@ -99,13 +138,17 @@
                             <?php endif; ?>
                             
                             <?php if (isset($_SESSION['connect']) && $_SESSION['connect'] === true): ?>
-                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                <div class="mt-6 pt-4 border-t border-gray-200">
                                     <a href="index.php?ctl=participation&action=participer_evenement&activity_type=<?php echo urlencode($activite['type']); ?>&activity_id=<?php echo urlencode($activite['id']); ?>" 
-                                       class="inline-block px-4 py-2 bg-red-500 text-white text-sm font-light hover:bg-red-600 transition-colors">
-                                        Participer
+                                       class="w-full inline-flex items-center justify-center px-4 py-3 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 hover-lift ripple">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                        <span>Participer</span>
                                     </a>
                                 </div>
                             <?php endif; ?>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -140,23 +183,40 @@
                 
                 <?php if (!empty($activitesAvecDate)): ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <?php foreach ($activitesAvecDate as $activite): ?>
-                        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-200">
-                            <div class="mb-4">
-                                <span class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
-                                    <?php 
-                                    if ($activite['type'] === 'manifestations_sportives') {
-                                        echo 'Manifestation sportive';
-                                    } else {
-                                        echo 'Événement culturel';
-                                    }
-                                    ?>
-                                </span>
+                        <?php 
+                        $cardIndex = 0;
+                        foreach ($activitesAvecDate as $activite): 
+                            $isSport = $activite['type'] === 'manifestations_sportives';
+                            $gradient = $gradients[$cardIndex % count($gradients)];
+                            $cardIndex++;
+                        ?>
+                        <div class="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 card-hover card-animate observe-on-scroll transform hover:scale-105">
+                            <!-- Header avec gradient -->
+                            <div class="bg-gradient-to-r <?php echo $gradient; ?> p-4 text-white relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                                <div class="relative z-10 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <?php if ($isSport): ?>
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                            </svg>
+                                        <?php else: ?>
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                                            </svg>
+                                        <?php endif; ?>
+                                        <span class="text-sm font-bold uppercase tracking-wide">
+                                            <?php echo $isSport ? 'Sport' : 'Culture'; ?>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <h3 class="text-lg font-bold text-gray-900 mb-3">
-                                <?php echo htmlspecialchars($activite['manifestation'] ?? $activite['nom_du_spectacle'] ?? 'Sans titre'); ?>
-                            </h3>
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors line-clamp-2">
+                                    <?php echo htmlspecialchars($activite['manifestation'] ?? $activite['nom_du_spectacle'] ?? 'Sans titre'); ?>
+                                </h3>
                             
                             <?php if ($activite['type'] === 'manifestations_sportives'): ?>
                                 <?php if ($activite['date_debut'] && $activite['date_de_fin']): ?>
@@ -171,8 +231,12 @@
                                 <?php endif; ?>
                                 
                                 <?php if ($activite['lieu']): ?>
-                                    <p class="text-sm text-gray-600 mb-2 font-light">
-                                        📍 <?php echo htmlspecialchars($activite['lieu']); ?>
+                                    <p class="text-sm text-gray-600 mb-2 font-light flex items-center space-x-2">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span><?php echo htmlspecialchars($activite['lieu']); ?></span>
                                     </p>
                                 <?php endif; ?>
                                 
@@ -198,8 +262,12 @@
                                 <?php endif; ?>
                                 
                                 <?php if ($activite['lieu_de_representation']): ?>
-                                    <p class="text-sm text-gray-600 mb-2 font-light">
-                                        📍 <?php echo htmlspecialchars($activite['lieu_de_representation']); ?>
+                                    <p class="text-sm text-gray-600 mb-2 font-light flex items-center space-x-2">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span><?php echo htmlspecialchars($activite['lieu_de_representation']); ?></span>
                                     </p>
                                 <?php endif; ?>
                                 
@@ -217,13 +285,17 @@
                             <?php endif; ?>
                             
                             <?php if (isset($_SESSION['connect']) && $_SESSION['connect'] === true): ?>
-                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                <div class="mt-6 pt-4 border-t border-gray-200">
                                     <a href="index.php?ctl=participation&action=participer_evenement&activity_type=<?php echo urlencode($activite['type']); ?>&activity_id=<?php echo urlencode($activite['id']); ?>" 
-                                       class="inline-block px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200">
-                                        Participer
+                                       class="w-full inline-flex items-center justify-center px-4 py-3 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 hover-lift ripple">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                        <span>Participer</span>
                                     </a>
                                 </div>
                             <?php endif; ?>
+                            </div>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -233,28 +305,47 @@
                     <div class="mt-8">
                         <h3 class="text-xl font-bold text-gray-700 mb-4 tracking-tight">Événements sans date</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <?php foreach ($activitesSansDate as $activite): ?>
-                                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-200">
-                                    <div class="mb-4">
-                                        <span class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
-                                            <?php 
-                                            if ($activite['type'] === 'manifestations_sportives') {
-                                                echo 'Manifestation sportive';
-                                            } else {
-                                                echo 'Événement culturel';
-                                            }
-                                            ?>
-                                        </span>
+                            <?php 
+                            foreach ($activitesSansDate as $activite): 
+                                $isSport = $activite['type'] === 'manifestations_sportives';
+                                $gradient = $gradients[($cardIndex++) % count($gradients)];
+                            ?>
+                                <div class="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 card-hover card-animate observe-on-scroll transform hover:scale-105">
+                                    <!-- Header avec gradient -->
+                                    <div class="bg-gradient-to-r <?php echo $gradient; ?> p-4 text-white relative overflow-hidden">
+                                        <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                                        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                                        <div class="relative z-10 flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <?php if ($isSport): ?>
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                                    </svg>
+                                                <?php else: ?>
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                                                    </svg>
+                                                <?php endif; ?>
+                                                <span class="text-sm font-bold uppercase tracking-wide">
+                                                    <?php echo $isSport ? 'Sport' : 'Culture'; ?>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                     
-                                    <h3 class="text-lg font-bold text-gray-900 mb-3">
-                                        <?php echo htmlspecialchars($activite['manifestation'] ?? $activite['nom_du_spectacle'] ?? 'Sans titre'); ?>
-                                    </h3>
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors line-clamp-2">
+                                            <?php echo htmlspecialchars($activite['manifestation'] ?? $activite['nom_du_spectacle'] ?? 'Sans titre'); ?>
+                                        </h3>
                                     
                                     <?php if ($activite['type'] === 'manifestations_sportives'): ?>
                                         <?php if ($activite['lieu']): ?>
-                                            <p class="text-sm text-gray-600 mb-2 font-light">
-                                                📍 <?php echo htmlspecialchars($activite['lieu']); ?>
+                                            <p class="text-sm text-gray-600 mb-2 font-light flex items-center space-x-2">
+                                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                </svg>
+                                                <span><?php echo htmlspecialchars($activite['lieu']); ?></span>
                                             </p>
                                         <?php endif; ?>
                                         
@@ -271,8 +362,12 @@
                                         <?php endif; ?>
                                     <?php else: // agenda_culturel ?>
                                         <?php if ($activite['lieu_de_representation']): ?>
-                                            <p class="text-sm text-gray-600 mb-2 font-light">
-                                                📍 <?php echo htmlspecialchars($activite['lieu_de_representation']); ?>
+                                            <p class="text-sm text-gray-600 mb-2 font-light flex items-center space-x-2">
+                                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                </svg>
+                                                <span><?php echo htmlspecialchars($activite['lieu_de_representation']); ?></span>
                                             </p>
                                         <?php endif; ?>
                                         
@@ -290,13 +385,17 @@
                                     <?php endif; ?>
                                     
                                     <?php if (isset($_SESSION['connect']) && $_SESSION['connect'] === true): ?>
-                                        <div class="mt-4 pt-4 border-t border-gray-200">
+                                        <div class="mt-6 pt-4 border-t border-gray-200">
                                             <a href="index.php?ctl=participation&action=participer_evenement&activity_type=<?php echo urlencode($activite['type']); ?>&activity_id=<?php echo urlencode($activite['id']); ?>" 
-                                               class="inline-block px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200">
-                                                Participer
+                                               class="w-full inline-flex items-center justify-center px-4 py-3 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 hover-lift ripple">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                </svg>
+                                                <span>Participer</span>
                                             </a>
                                         </div>
                                     <?php endif; ?>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>

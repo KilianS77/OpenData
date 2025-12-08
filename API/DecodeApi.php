@@ -127,7 +127,7 @@ class DecodeApi {
                 // Vérifier si l'aire existe déjà
                 // Clé unique : libelle + adresse
                 if ($adresse) {
-                    $stmt = $db->prepare("SELECT id FROM aires_jeux WHERE libelle = ? AND adresse = ?");
+                $stmt = $db->prepare("SELECT id FROM aires_jeux WHERE libelle = ? AND adresse = ?");
                     $stmt->execute([$libelle, $adresse]);
                 } else {
                     $stmt = $db->prepare("SELECT id FROM aires_jeux WHERE libelle = ? AND (adresse IS NULL OR adresse = '')");
@@ -141,14 +141,14 @@ class DecodeApi {
                 }
                 
                 // N'existe pas, on ajoute
-                $stmt = $db->prepare("
-                    INSERT INTO aires_jeux 
-                    (famille_eqpt, public_autorise, libelle, tranches_age, pmr, 
-                     acces_entree_pmr, acces_sol_pmr, acces_modules_pmr, adresse, 
-                     commune, codeinsee, latitude, longitude, photo, data_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $result = $stmt->execute([
+                    $stmt = $db->prepare("
+                        INSERT INTO aires_jeux 
+                        (famille_eqpt, public_autorise, libelle, tranches_age, pmr, 
+                         acces_entree_pmr, acces_sol_pmr, acces_modules_pmr, adresse, 
+                         commune, codeinsee, latitude, longitude, photo, data_json)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $result = $stmt->execute([
                     trim($item['famille_eqpt'] ?? '') ?: null,
                     trim($item['public_autorise'] ?? '') ?: null,
                     $libelle ?: 'Nom non disponible',
@@ -160,11 +160,11 @@ class DecodeApi {
                     $adresse ?: null,
                     trim($item['commune'] ?? '') ?: null,
                     trim($item['codeinsee'] ?? '') ?: null,
-                    $lat,
-                    $lon,
+                        $lat,
+                        $lon,
                     trim($item['photo'] ?? '') ?: null,
-                    json_encode($item)
-                ]);
+                        json_encode($item)
+                    ]);
                 
                 if ($result) {
                     $saved++;
@@ -243,7 +243,7 @@ class DecodeApi {
                 // Vérifier si l'équipement existe déjà
                 // Clé unique : equip_nom + adr_num_et_rue
                 if ($adresse) {
-                    $stmt = $db->prepare("SELECT id FROM equipements_sportifs WHERE equip_nom = ? AND adr_num_et_rue = ?");
+                $stmt = $db->prepare("SELECT id FROM equipements_sportifs WHERE equip_nom = ? AND adr_num_et_rue = ?");
                     $stmt->execute([$equipNom, $adresse]);
                 } else {
                     $stmt = $db->prepare("SELECT id FROM equipements_sportifs WHERE equip_nom = ? AND (adr_num_et_rue IS NULL OR adr_num_et_rue = '')");
@@ -257,13 +257,13 @@ class DecodeApi {
                 }
                 
                 // N'existe pas, on ajoute
-                $stmt = $db->prepare("
-                    INSERT INTO equipements_sportifs 
-                    (equip_theme, equip_type, equip_nom, adr_codepostal, adr_commune, 
-                     adr_code_insee_com, adr_num_et_rue, latitude, longitude, data_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $result = $stmt->execute([
+                    $stmt = $db->prepare("
+                        INSERT INTO equipements_sportifs 
+                        (equip_theme, equip_type, equip_nom, adr_codepostal, adr_commune, 
+                         adr_code_insee_com, adr_num_et_rue, latitude, longitude, data_json)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $result = $stmt->execute([
                     trim($item['equip_theme'] ?? '') ?: null,
                     trim($item['equip_type'] ?? '') ?: null,
                     $equipNom ?: 'Nom non disponible',
@@ -271,10 +271,10 @@ class DecodeApi {
                     trim($item['adr_commune'] ?? '') ?: null,
                     trim($item['adr_code_insee_com'] ?? '') ?: null,
                     $adresse ?: null,
-                    $lat,
-                    $lon,
-                    json_encode($item)
-                ]);
+                        $lat,
+                        $lon,
+                        json_encode($item)
+                    ]);
                 
                 if ($result) {
                     $saved++;
@@ -376,24 +376,24 @@ class DecodeApi {
                 $lat = null;
                 $lon = null;
                 
-                $stmt = $db->prepare("
-                    INSERT INTO manifestations_sportives 
-                    (association_ou_service, manifestation, date_debut, date_de_fin, lieu, 
-                     adresse, commune, latitude, longitude, data_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $result = $stmt->execute([
+                    $stmt = $db->prepare("
+                        INSERT INTO manifestations_sportives 
+                        (association_ou_service, manifestation, date_debut, date_de_fin, lieu, 
+                         adresse, commune, latitude, longitude, data_json)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $result = $stmt->execute([
                     trim($item['association_ou_service'] ?? ''),
                     $manifestation,
-                    $dateDebut,
-                    $dateFin,
+                        $dateDebut,
+                        $dateFin,
                     $lieu,
                     null,
                     null,
-                    $lat,
-                    $lon,
-                    json_encode($item)
-                ]);
+                        $lat,
+                        $lon,
+                        json_encode($item)
+                    ]);
                 
                 if ($result) {
                     $saved++;
@@ -485,7 +485,7 @@ class DecodeApi {
                 }
                 
                 if (isset($stmt)) {
-                    $existing = $stmt->fetch();
+                $existing = $stmt->fetch();
                 } else {
                     $existing = false;
                 }
@@ -499,24 +499,24 @@ class DecodeApi {
                 $lat = null;
                 $lon = null;
                 
-                $stmt = $db->prepare("
-                    INSERT INTO agenda_culturel 
-                    (date, horaire, commune, thematique, nom_du_spectacle, lieu_de_representation, 
-                     adresse, latitude, longitude, data_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $result = $stmt->execute([
-                    $date,
+                    $stmt = $db->prepare("
+                        INSERT INTO agenda_culturel 
+                        (date, horaire, commune, thematique, nom_du_spectacle, lieu_de_representation, 
+                         adresse, latitude, longitude, data_json)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $result = $stmt->execute([
+                        $date,
                     $horaire ?: null,
                     trim($item['commune'] ?? '') ?: null,
                     trim($item['thematique'] ?? '') ?: null,
                     $nomSpectacle,
                     $lieu ?: null,
                     null,
-                    $lat,
-                    $lon,
-                    json_encode($item)
-                ]);
+                        $lat,
+                        $lon,
+                        json_encode($item)
+                    ]);
                 
                 if ($result) {
                     $saved++;
@@ -603,7 +603,7 @@ class DecodeApi {
                 // Vérifier si le point existe déjà
                 // Clé unique : libelle + adresse
                 if ($adresse) {
-                    $stmt = $db->prepare("SELECT id FROM points_interets WHERE libelle = ? AND adresse = ?");
+                $stmt = $db->prepare("SELECT id FROM points_interets WHERE libelle = ? AND adresse = ?");
                     $stmt->execute([$libelle, $adresse]);
                 } else {
                     $stmt = $db->prepare("SELECT id FROM points_interets WHERE libelle = ? AND (adresse IS NULL OR adresse = '')");
@@ -617,13 +617,13 @@ class DecodeApi {
                 }
                 
                 // N'existe pas, on ajoute
-                $stmt = $db->prepare("
-                    INSERT INTO points_interets 
-                    (libelle, thematique, descriptio, liens_vers, photo, credit_photo, 
-                     adresse, commune, code_insee, latitude, longitude, data_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $result = $stmt->execute([
+                    $stmt = $db->prepare("
+                        INSERT INTO points_interets 
+                        (libelle, thematique, descriptio, liens_vers, photo, credit_photo, 
+                         adresse, commune, code_insee, latitude, longitude, data_json)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $result = $stmt->execute([
                     $libelle ?: 'Nom non disponible',
                     trim($item['thematique'] ?? '') ?: null,
                     trim($item['descriptio'] ?? '') ?: null,
@@ -633,10 +633,10 @@ class DecodeApi {
                     $adresse ?: null,
                     trim($item['commune'] ?? '') ?: null,
                     trim($item['code_insee'] ?? '') ?: null,
-                    $lat,
-                    $lon,
-                    json_encode($item)
-                ]);
+                        $lat,
+                        $lon,
+                        json_encode($item)
+                    ]);
                 
                 if ($result) {
                     $saved++;

@@ -1,18 +1,25 @@
 <?php
 require_once __DIR__ . '/../Model/ParticipationModel.php';
 
+// Fonction helper pour rediriger en nettoyant le buffer
+function redirect($url) {
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
+    header('Location: ' . $url);
+    exit();
+}
+
 // Vérifier que l'utilisateur est connecté
 if (!isset($_SESSION['connect']) || $_SESSION['connect'] !== true) {
     $_SESSION['error'] = 'Vous devez être connecté pour accéder à cette page';
-    header('Location: index.php?ctl=connexion&action=connexion');
-    exit();
+    redirect('index.php?ctl=connexion&action=connexion');
 }
 
 $userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
     $_SESSION['error'] = 'Erreur de session';
-    header('Location: index.php?ctl=connexion&action=connexion');
-    exit();
+    redirect('index.php?ctl=connexion&action=connexion');
 }
 
 $action = $_GET['action'] ?? 'mes_participations';
@@ -26,8 +33,7 @@ switch ($action) {
         
         if (empty($activityType) || empty($activityId)) {
             $_SESSION['error'] = 'Informations d\'activité manquantes';
-            header('Location: index.php?ctl=map');
-            exit();
+            redirect('index.php?ctl=map');
         }
         
         // Récupérer les détails de l'activité selon le type
@@ -93,8 +99,7 @@ switch ($action) {
         
         if (empty($activityType) || empty($activityId) || $activityType !== 'manifestations_sportives') {
             $_SESSION['error'] = 'Informations d\'activité manquantes';
-            header('Location: index.php?ctl=evenements&action=liste');
-            exit();
+            redirect('index.php?ctl=evenements&action=liste');
         }
         
         try {
@@ -107,14 +112,12 @@ switch ($action) {
             
             if (!$event) {
                 $_SESSION['error'] = 'Manifestation introuvable';
-                header('Location: index.php?ctl=evenements&action=liste');
-                exit();
+                redirect('index.php?ctl=evenements&action=liste');
             }
             
             if (!$event['date_debut'] || !$event['date_de_fin'] || $event['date_debut'] === $event['date_de_fin']) {
                 // Si les dates sont identiques, rediriger vers la participation directe
-                header('Location: index.php?ctl=participation&action=participer_evenement&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
-                exit();
+                redirect('index.php?ctl=participation&action=participer_evenement&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
             }
             
             $activityName = $event['manifestation'];
@@ -127,8 +130,7 @@ switch ($action) {
         } catch (Exception $e) {
             error_log("Erreur récupération manifestation: " . $e->getMessage());
             $_SESSION['error'] = 'Erreur lors de la récupération de la manifestation';
-            header('Location: index.php?ctl=evenements&action=liste');
-            exit();
+            redirect('index.php?ctl=evenements&action=liste');
         }
         break;
     
@@ -215,11 +217,10 @@ switch ($action) {
                 $_SESSION['form_data'] = $_POST;
                 // Rediriger vers le bon formulaire selon le type
                 if ($activityType === 'manifestations_sportives') {
-                    header('Location: index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
+                    redirect('index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
                 } else {
-                    header('Location: index.php?ctl=participation&action=participer&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId) . '&ActivityDescription=' . urlencode($activityDescription));
+                    redirect('index.php?ctl=participation&action=participer&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId) . '&ActivityDescription=' . urlencode($activityDescription));
                 }
-                exit();
             }
             
             // Créer la participation
@@ -237,8 +238,7 @@ switch ($action) {
                 
                 if ($result) {
                     $_SESSION['success'] = 'Participation enregistrée avec succès !';
-                    header('Location: index.php?ctl=participation&action=mes_participations');
-                    exit();
+                    redirect('index.php?ctl=participation&action=mes_participations');
                 } else {
                     // Vérifier si c'est une erreur de contrainte unique (doublon)
                     $alreadyExists = ParticipationModel::verifierParticipationDejaExistante(
@@ -254,20 +254,17 @@ switch ($action) {
                         $_SESSION['error'] = 'Erreur lors de l\'enregistrement de la participation. Veuillez réessayer.';
                     }
                     $_SESSION['form_data'] = $_POST;
-                    header('Location: index.php?ctl=participation&action=participer&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId) . '&ActivityDescription=' . urlencode($activityDescription));
-                    exit();
+                    redirect('index.php?ctl=participation&action=participer&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId) . '&ActivityDescription=' . urlencode($activityDescription));
                 }
             } catch (Exception $e) {
                 error_log("❌ Exception lors de la création de participation: " . $e->getMessage());
                 error_log("Stack trace: " . $e->getTraceAsString());
                 $_SESSION['error'] = 'Erreur technique lors de l\'enregistrement: ' . htmlspecialchars($e->getMessage());
                 $_SESSION['form_data'] = $_POST;
-                header('Location: index.php?ctl=participation&action=participer&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId) . '&ActivityDescription=' . urlencode($activityDescription));
-                exit();
+                    redirect('index.php?ctl=participation&action=participer&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId) . '&ActivityDescription=' . urlencode($activityDescription));
             }
         } else {
-            header('Location: index.php?ctl=participation&action=mes_participations');
-            exit();
+                    redirect('index.php?ctl=participation&action=mes_participations');
         }
         break;
     
@@ -337,8 +334,7 @@ switch ($action) {
             if (!empty($errors)) {
                 $_SESSION['error'] = implode('<br>', $errors);
                 $_SESSION['form_data'] = $_POST;
-                header('Location: index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
-                exit();
+                redirect('index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
             }
             
             // Créer la participation (sans heure pour les manifestations)
@@ -354,8 +350,7 @@ switch ($action) {
                 
                 if ($result) {
                     $_SESSION['success'] = 'Participation enregistrée avec succès !';
-                    header('Location: index.php?ctl=participation&action=mes_participations');
-                    exit();
+                    redirect('index.php?ctl=participation&action=mes_participations');
                 } else {
                     // Vérifier si c'est une erreur de contrainte unique (doublon)
                     $alreadyExists = ParticipationModel::verifierParticipationDejaExistante(
@@ -371,20 +366,17 @@ switch ($action) {
                         $_SESSION['error'] = 'Erreur lors de l\'enregistrement de la participation. Veuillez réessayer.';
                     }
                     $_SESSION['form_data'] = $_POST;
-                    header('Location: index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
-                    exit();
+                    redirect('index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
                 }
             } catch (Exception $e) {
                 error_log("❌ Exception lors de la création de participation: " . $e->getMessage());
                 error_log("Stack trace: " . $e->getTraceAsString());
                 $_SESSION['error'] = 'Erreur technique lors de l\'enregistrement: ' . htmlspecialchars($e->getMessage());
                 $_SESSION['form_data'] = $_POST;
-                header('Location: index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
-                exit();
+                redirect('index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
             }
         } else {
-            header('Location: index.php?ctl=evenements&action=liste');
-            exit();
+            redirect('index.php?ctl=evenements&action=liste');
         }
         break;
     
@@ -401,15 +393,13 @@ switch ($action) {
         
         if (empty($activityType) || empty($activityId)) {
             $_SESSION['error'] = 'Informations d\'événement manquantes';
-            header('Location: index.php?ctl=evenements&action=liste');
-            exit();
+            redirect('index.php?ctl=evenements&action=liste');
         }
         
         // Vérifier que c'est bien un événement (manifestations_sportives ou agenda_culturel)
         if ($activityType !== 'manifestations_sportives' && $activityType !== 'agenda_culturel') {
             $_SESSION['error'] = 'Cette action n\'est disponible que pour les événements';
-            header('Location: index.php?ctl=evenements&action=liste');
-            exit();
+            redirect('index.php?ctl=evenements&action=liste');
         }
         
         try {
@@ -428,15 +418,13 @@ switch ($action) {
                 
                 if (!$event) {
                     $_SESSION['error'] = 'Événement introuvable';
-                    header('Location: index.php?ctl=evenements&action=liste');
-                    exit();
+                    redirect('index.php?ctl=evenements&action=liste');
                 }
                 
                 // Si date_debut et date_de_fin sont différentes, rediriger vers le formulaire de sélection de date
                 if ($event['date_debut'] && $event['date_de_fin'] && $event['date_debut'] !== $event['date_de_fin']) {
                     // Rediriger vers le formulaire avec les informations de la manifestation
-                    header('Location: index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
-                    exit();
+                    redirect('index.php?ctl=participation&action=participer_manifestation&activity_type=' . urlencode($activityType) . '&activity_id=' . urlencode($activityId));
                 }
                 
                 // Si les dates sont identiques ou une seule date, utiliser directement
@@ -450,8 +438,7 @@ switch ($action) {
                 
                 if (!$event) {
                     $_SESSION['error'] = 'Événement introuvable';
-                    header('Location: index.php?ctl=evenements&action=liste');
-                    exit();
+                    redirect('index.php?ctl=evenements&action=liste');
                 }
                 
                 $datePresence = $event['date'];
@@ -470,8 +457,7 @@ switch ($action) {
             
             if (!$datePresence) {
                 $_SESSION['error'] = 'Date de l\'événement non disponible';
-                header('Location: index.php?ctl=evenements&action=liste');
-                exit();
+                redirect('index.php?ctl=evenements&action=liste');
             }
             
             // Vérifier si déjà inscrit pour cette date
@@ -484,8 +470,7 @@ switch ($action) {
             
             if ($alreadyExists) {
                 $_SESSION['error'] = 'Vous êtes déjà inscrit à cet événement';
-                header('Location: index.php?ctl=evenements&action=liste');
-                exit();
+                redirect('index.php?ctl=evenements&action=liste');
             }
             
             // Créer la participation directement
@@ -500,19 +485,16 @@ switch ($action) {
             
             if ($result) {
                 $_SESSION['success'] = 'Vous êtes maintenant inscrit à cet événement !';
-                header('Location: index.php?ctl=participation&action=mes_participations');
-                exit();
+                    redirect('index.php?ctl=participation&action=mes_participations');
             } else {
                 $_SESSION['error'] = 'Erreur lors de l\'inscription. Veuillez réessayer.';
-                header('Location: index.php?ctl=evenements&action=liste');
-                exit();
+                redirect('index.php?ctl=evenements&action=liste');
             }
             
         } catch (Exception $e) {
             error_log("Erreur participation événement: " . $e->getMessage());
             $_SESSION['error'] = 'Erreur technique lors de l\'inscription';
-            header('Location: index.php?ctl=evenements&action=liste');
-            exit();
+            redirect('index.php?ctl=evenements&action=liste');
         }
         break;
     
@@ -529,8 +511,7 @@ switch ($action) {
             }
         }
         
-        header('Location: index.php?ctl=participation&action=mes_participations');
-        exit();
+                    redirect('index.php?ctl=participation&action=mes_participations');
         break;
     
     case 'participations_autres':
@@ -585,9 +566,8 @@ switch ($action) {
                 echo json_encode(['success' => false, 'error' => 'Impossible d\'envoyer l\'invitation']);
             }
         } else {
-            header('Location: index.php?ctl=participation&action=mes_participations');
+            redirect('index.php?ctl=participation&action=mes_participations');
         }
-        exit();
         break;
     
     case 'mes_invitations':
@@ -614,8 +594,7 @@ switch ($action) {
             }
         }
         
-        header('Location: index.php?ctl=participation&action=mes_invitations');
-        exit();
+        redirect('index.php?ctl=participation&action=mes_invitations');
         break;
     
     case 'refuser_invitation':
@@ -633,13 +612,11 @@ switch ($action) {
             }
         }
         
-        header('Location: index.php?ctl=participation&action=mes_invitations');
-        exit();
+        redirect('index.php?ctl=participation&action=mes_invitations');
         break;
     
     default:
-        header('Location: index.php?ctl=participation&action=mes_participations');
-        exit();
+                    redirect('index.php?ctl=participation&action=mes_participations');
 }
 ?>
 

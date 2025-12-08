@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// Démarrer le output buffering pour permettre les redirections
+ob_start();
+
 // Vérifier si c'est une requête AJAX (pour les paramètres, activités, événements et amis)
 $isAjaxRequest = (
     (isset($_GET['ctl']) && $_GET['ctl'] === 'parametres' && 
@@ -74,5 +77,14 @@ if (isset($_GET['ctl'])) {
 if (!$isAjaxRequest) {
     // Toujours inclure le footer
     include 'Vue/Entetes_Footers/footer.php';
+}
+
+// Vérifier si une redirection a été effectuée (headers déjà envoyés)
+// Si oui, nettoyer le buffer et ne rien afficher
+if (headers_sent()) {
+    ob_end_clean();
+} else {
+    // Afficher le contenu du buffer
+    ob_end_flush();
 }
 ?>

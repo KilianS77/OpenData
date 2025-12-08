@@ -47,7 +47,7 @@
                     <h2 class="text-lg font-semibold text-gray-900 mb-4 tracking-tight">Demandes reçues</h2>
                     <div class="space-y-3">
                         <?php foreach ($pendingRequests as $request): ?>
-                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-200 flex items-center justify-between">
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-red-300 transition-all duration-300 card-hover card-animate observe-on-scroll flex items-center justify-between">
                                 <div>
                                     <h3 class="font-semibold text-gray-900"><?php echo htmlspecialchars($request['sender_name']); ?></h3>
                                     <p class="text-sm text-gray-600 font-light"><?php echo htmlspecialchars($request['sender_email']); ?></p>
@@ -81,7 +81,7 @@
                     <h2 class="text-lg font-semibold text-gray-900 mb-4 tracking-tight">Demandes envoyées</h2>
                     <div class="space-y-3">
                         <?php foreach ($sentRequests as $request): ?>
-                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-200 flex items-center justify-between">
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-red-300 transition-all duration-300 card-hover card-animate observe-on-scroll flex items-center justify-between">
                                 <div>
                                     <h3 class="font-semibold text-gray-900"><?php echo htmlspecialchars($request['friend_name']); ?></h3>
                                     <p class="text-sm text-gray-600 font-light"><?php echo htmlspecialchars($request['friend_email']); ?></p>
@@ -114,7 +114,7 @@
                 <?php else: ?>
                     <div class="space-y-3">
                         <?php foreach ($friends as $friend): ?>
-                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-200 flex items-center justify-between">
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-red-300 transition-all duration-300 card-hover card-animate observe-on-scroll flex items-center justify-between">
                                 <div>
                                     <h3 class="font-semibold text-gray-900"><?php echo htmlspecialchars($friend['friend_name']); ?></h3>
                                     <p class="text-sm text-gray-600 font-light"><?php echo htmlspecialchars($friend['friend_email']); ?></p>

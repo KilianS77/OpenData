@@ -83,27 +83,48 @@
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         
         <!-- Header de la page -->
-        <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
+        <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 animate-fade-in-down">
             <div class="flex items-start justify-between flex-wrap gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-white mb-1 tracking-tight">Carte Interactive</h1>
+                    <div class="flex items-center space-x-3 mb-2">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">Carte Interactive</h1>
+                    </div>
                     <p class="text-sm text-red-100 font-light">Découvrez et participez aux événements de votre ville</p>
                 </div>
                 
                 <!-- Filtres dans le header -->
-                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-lg">
-                    <h3 class="font-semibold text-sm text-gray-900 mb-4 tracking-wide">Filtres</h3>
+                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-lg animate-scale-in">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        <h3 class="font-semibold text-sm text-gray-900 tracking-wide">Filtres</h3>
+                    </div>
                     <div class="flex flex-wrap gap-4">
-                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-all duration-200 hover-lift">
                             <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500 rounded" data-type="equipements" checked>
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
                             <span class="text-sm text-gray-700 font-medium">Équipements sportifs</span>
                         </label>
-                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-all duration-200 hover-lift">
                             <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500 rounded" data-type="aires" checked>
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
                             <span class="text-sm text-gray-700 font-medium">Aires de jeux</span>
                         </label>
-                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-all duration-200 hover-lift">
                             <input type="checkbox" class="filter-checkbox w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500 rounded" data-type="points" checked>
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
                             <span class="text-sm text-gray-700 font-medium">Points d'intérêt</span>
                         </label>
                     </div>
@@ -125,17 +146,30 @@
                 <!-- En-tête sidebar -->
                 <div class="p-5 bg-gray-50 border-b border-gray-200 flex-shrink-0">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-bold text-gray-900 tracking-tight">Activités</h2>
-                        <button id="refreshBtn" type="button" class="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-200">
-                            Actualiser
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            <h2 class="text-lg font-bold text-gray-900 tracking-tight">Activités</h2>
+                        </div>
+                        <button id="refreshBtn" type="button" class="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-300 hover-lift flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span>Actualiser</span>
                         </button>
                     </div>
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        placeholder="Rechercher une activité..." 
-                        class="w-full px-4 py-2 border border-gray-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-sm font-light"
-                    >
+                    <div class="relative">
+                        <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Rechercher une activité..." 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-sm font-light rounded-lg transition-all duration-200"
+                        >
+                    </div>
                 </div>
 
                 <!-- Liste des activités (scrollable) -->
@@ -354,18 +388,18 @@ function displayMarkers() {
             const canParticipate = isConnected;
 
             const popupContent = `
-                <div class="p-3">
-                    <h3 class="font-light text-base mb-2 text-gray-900">${activity.name}</h3>
+                <div class="p-3" style="min-width: 200px;">
+                    <h3 class="font-semibold text-base mb-2 text-gray-900">${activity.name}</h3>
                     <p class="text-xs text-gray-600 mb-2 font-light">${activity.address || activity.commune || ''}${activity.commune && activity.address ? ', ' + activity.commune : ''}</p>
-                    <p class="text-xs text-gray-500 mb-3 font-light">${activity.description || ''}</p>
+                    <p class="text-xs text-gray-500 mb-3 font-light line-clamp-2">${activity.description || ''}</p>
                     <div class="flex space-x-2 pt-2 border-t border-gray-200">
                         <button onclick="window.showActivityDetails('${activity.type}', ${activity.id})" 
-                                class="px-3 py-1.5 bg-white border-2 border-red-500 text-red-500 text-xs font-semibold rounded-lg hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md transition-all duration-200">
+                                class="flex-1 px-3 py-2 bg-white border-2 border-red-500 text-red-500 text-xs font-semibold rounded-lg hover:bg-red-500 hover:text-white shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
                             Détails
                         </button>
                         ${canParticipate ? `
                         <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || activity.commune || '') + (activity.commune && activity.address ? ', ' + activity.commune : ''))}" 
-                                class="px-3 py-1.5 bg-red-500 text-white text-xs font-semibold rounded-lg hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-200 inline-block">
+                                class="flex-1 px-3 py-2 bg-red-500 text-white text-xs font-semibold rounded-lg hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-300 text-center" style="color: white !important;">
                             Participer
                         </a>
                         ` : ''}
@@ -423,7 +457,8 @@ function displayActivities() {
                 ${canParticipate ? `
                 <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
                         onclick="event.stopPropagation();"
-                        class="px-3 py-1 bg-red-500 text-white text-xs font-light hover:bg-red-600 transition-colors inline-block">
+                        class="px-4 py-2 bg-red-500 text-white text-xs font-semibold rounded-lg hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-300 inline-block"
+                        style="color: white !important;">
                     Participer
                 </a>
                 ` : ''}
@@ -497,20 +532,36 @@ window.showActivityDetails = function(activityType, activityId) {
                 
                 <div class="space-y-6">
                     <div class="border-b border-gray-200 pb-4">
-                        <h3 class="font-semibold text-sm text-gray-700 mb-2 tracking-wide">📍 Adresse</h3>
+                        <h3 class="font-semibold text-sm text-gray-700 mb-2 tracking-wide flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span>Adresse</span>
+                        </h3>
                         <p class="text-sm text-gray-600 font-light">${activity.address}, ${activity.commune}</p>
                     </div>
                     
                     <div class="border-b border-gray-200 pb-4">
-                        <h3 class="font-semibold text-sm text-gray-700 mb-2 tracking-wide">📝 Description</h3>
+                        <h3 class="font-semibold text-sm text-gray-700 mb-2 tracking-wide flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>Description</span>
+                        </h3>
                         <p class="text-sm text-gray-600 font-light">${activity.description || 'Aucune description disponible'}</p>
                     </div>
                     
                     ${canParticipate ? `
                     <div class="flex space-x-3 pt-4">
                         <a href="index.php?ctl=participation&action=participer&activity_type=${encodeURIComponent(activity.type)}&activity_id=${encodeURIComponent(activity.id)}&ActivityDescription=${encodeURIComponent((activity.name || '') + ' - ' + (activity.address || '') + ', ' + (activity.commune || ''))}" 
-                                class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-center">
-                            Je participe
+                                class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-center hover-lift ripple">
+                            <span class="flex items-center justify-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                <span>Je participe</span>
+                            </span>
                         </a>
                     </div>
                     ` : ''}
