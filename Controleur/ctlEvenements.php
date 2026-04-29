@@ -15,13 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     // Nettoyer le buffer de sortie (supprime tous les echo)
     ob_clean();
     
+    $manifestationsSkipped = isset($result['manifestations']['skipped']) && $result['manifestations']['skipped'];
+    
     echo json_encode([
         'success' => $result['success'],
         'manifestations' => $result['manifestations'],
         'agenda' => $result['agenda'],
-        'total_saved' => $result['manifestations']['saved'] + $result['agenda']['saved'],
-        'total_updated' => $result['manifestations']['updated'] + $result['agenda']['updated'],
-        'total_errors' => $result['manifestations']['errors'] + $result['agenda']['errors']
+        'calendrier_mee' => $result['calendrier_mee'],
+        'total_saved' => $result['manifestations']['saved'] + $result['agenda']['saved'] + $result['calendrier_mee']['saved'],
+        'total_updated' => $result['manifestations']['updated'] + $result['agenda']['updated'] + $result['calendrier_mee']['updated'],
+        'total_errors' => $result['manifestations']['errors'] + $result['agenda']['errors'] + $result['calendrier_mee']['errors'],
+        'manifestations_skipped' => $manifestationsSkipped
     ]);
     exit();
 }

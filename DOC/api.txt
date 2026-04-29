@@ -1,14 +1,21 @@
+# API OpenData Melun Val de Seine
+# Documentation des endpoints utilisés dans l'application
 
-        'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/equipements-sportifs/records?limit=-1',
-    
-        'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/aires-de-jeux/records?limit=-1',
+## Équipements sportifs
+'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/equipements-sportifs/records?limit=-1'
 
+## Aires de jeux
+'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/aires-de-jeux/records?limit=-1'
 
-    AVEC HEURE ATTENTION    'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/agenda-culturel-communautaire-2025-2026/records?limit=-1',
+## Agenda culturel communautaire (AVEC HEURE)
+'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/agenda-culturel-communautaire-2025-2026/records?limit=-1'
 
+## Manifestations sportives Melun
+'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/manifestations-sportives-melun/records?limit=-1'
 
- AVEC HEURE ATTENTION    'url' =>   https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/manifestations-sportives-en-2025-a-melun/records?limit=-1',
+## Calendrier des manifestations Le Mée-sur-Seine (AVEC HEURE)
+'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/calendrier-des-manifestations-le-mee-sur-seine/records?limit=-1'
 
-      'url' =>   https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/points-d-interets/records?limit=-1',
+## Points d'intérêt
+'url' => 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/points-d-interets/records?limit=-1'
 
-       

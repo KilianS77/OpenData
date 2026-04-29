@@ -442,17 +442,21 @@ async function syncEvenementsFromAPI() {
         if (result.success) {
             const saved = result.total_saved || 0;
             const errors = result.total_errors || 0;
+            const manifestationsSkipped = result.manifestations_skipped || false;
             
             console.log(`✅ Synchronisation terminée: ${saved} créés, ${errors} erreurs`);
             
             let message = '✅ Synchronisation terminée avec succès';
+            if (manifestationsSkipped) {
+                message += `<br><span class="text-xs mt-1 block text-yellow-600">⚠️ Dataset des manifestations sportives non disponible sur le portail</span>`;
+            }
             if (saved > 0 || errors > 0) {
                 message += `<br><span class="text-xs mt-1 block">${saved} nouveau(x) événement(s) ajouté(s)`;
                 if (errors > 0) {
                     message += `, ${errors} erreur(s)`;
                 }
                 message += '</span>';
-            } else {
+            } else if (!manifestationsSkipped) {
                 message += `<br><span class="text-xs mt-1 block">Aucun nouvel événement à ajouter</span>`;
             }
             

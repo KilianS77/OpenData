@@ -296,7 +296,7 @@ class DecodeApi {
      * Logique simple : si existe déjà, on ignore. Sinon, on ajoute.
      */
     public static function syncManifestationsSportives() {
-        $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/manifestations-sportives-en-2025-a-melun/records?limit=-1';
+        $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/manifestations-sportives-melun/records?limit=-1';
         
         echo "Synchronisation des manifestations sportives...\n";
         
@@ -331,6 +331,9 @@ class DecodeApi {
                 if (empty($manifestation)) {
                     continue; // Ignorer si pas de nom
                 }
+                
+                // Adapter pour le nouveau champ nom_association
+                $association = trim($item['nom_association'] ?? $item['association_ou_service'] ?? '');
                 
                 // Convertir les dates
                 $dateDebut = null;
@@ -383,7 +386,7 @@ class DecodeApi {
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ");
                     $result = $stmt->execute([
-                    trim($item['association_ou_service'] ?? ''),
+                    $association,
                     $manifestation,
                         $dateDebut,
                         $dateFin,
@@ -407,6 +410,133 @@ class DecodeApi {
         }
         
         echo "✅ Manifestations sportives: $saved créées, $errors erreurs\n";
+        return ['success' => true, 'saved' => $saved, 'updated' => 0, 'errors' => $errors];
+    }
+    
+    /**
+     * Synchroniser le calendrier des manifestations du Mée-sur-Seine
+     * Logique simple : si existe déjà, on ignore. Sinon, on ajoute.
+     */
+    public static function syncCalendrierMeeSurSeine() {
+        $url = 'https://data.melunvaldeseine.fr/api/explore/v2.1/catalog/datasets/calendrier-des-manifestations-le-mee-sur-seine/records?limit=-1';
+        
+        echo "Synchronisation du calendrier du Mée-sur-Seine...\n";
+        
+        $response = self::fetchUrl($url);
+        if (!$response) {
+            echo "❌ Impossible de récupérer les données du calendrier du Mée-sur-Seine\n";
+            return ['success' => false, 'saved' => 0, 'updated' => 0, 'errors' => 1];
+        }
+        
+        $data = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            echo "❌ Erreur de décodage JSON: " . json_last_error_msg() . "\n";
+            return ['success' => false, 'saved' => 0, 'updated' => 0, 'errors' => 1];
+        }
+        
+        if (!isset($data['results']) || !is_array($data['results'])) {
+            echo "❌ Aucun résultat trouvé\n";
+            return ['success' => false, 'saved' => 0, 'updated' => 0, 'errors' => 1];
+        }
+        
+        $db = self::initDb();
+        $saved = 0;
+        $errors = 0;
+        
+        foreach ($data['results'] as $record) {
+            try {
+                // Extraire les données - l'API OpenData peut avoir les données dans 'fields' ou directement
+                $item = $record['fields'] ?? $record['record']['fields'] ?? $record;
+                
+                // Normaliser les valeurs
+                $objet = trim($item['objet'] ?? '');
+                if (empty($objet)) {
+                    continue; // Ignorer si pas d'objet
+                }
+                
+                // Convertir les dates
+                $dateDebut = null;
+                $dateFin = null;
+                if (isset($item['date_de_debut']) && !empty($item['date_de_debut'])) {
+                    $dateDebut = date('Y-m-d', strtotime($item['date_de_debut']));
+                }
+                if (isset($item['date_de_fin']) && !empty($item['date_de_fin'])) {
+                    $dateFin = date('Y-m-d', strtotime($item['date_de_fin']));
+                }
+                
+                // Convertir les heures
+                $heureDebut = null;
+                $heureFin = null;
+                if (isset($item['heure_de_debut']) && !empty($item['heure_de_debut']) && $item['heure_de_debut'] !== 'non défini') {
+                    $heureDebut = date('H:i:s', strtotime($item['heure_de_debut']));
+                }
+                if (isset($item['heure_de_fin']) && !empty($item['heure_de_fin']) && $item['heure_de_fin'] !== 'non défini') {
+                    $heureFin = date('H:i:s', strtotime($item['heure_de_fin']));
+                }
+                
+                $service = trim($item['service'] ?? '');
+                $salle = trim($item['salle'] ?? '');
+                $plageHoraire = trim($item['plage_horaire'] ?? '');
+                
+                // Vérifier si l'événement existe déjà
+                // Clé unique : objet + date_de_debut + salle + heure_de_debut
+                if ($dateDebut) {
+                    if ($salle && $heureDebut) {
+                        $stmt = $db->prepare("SELECT id FROM calendrier_mee_sur_seine WHERE objet = ? AND date_de_debut = ? AND salle = ? AND heure_de_debut = ?");
+                        $stmt->execute([$objet, $dateDebut, $salle, $heureDebut]);
+                    } elseif ($salle) {
+                        $stmt = $db->prepare("SELECT id FROM calendrier_mee_sur_seine WHERE objet = ? AND date_de_debut = ? AND salle = ? AND (heure_de_debut IS NULL OR heure_de_debut = '')");
+                        $stmt->execute([$objet, $dateDebut, $salle]);
+                    } elseif ($heureDebut) {
+                        $stmt = $db->prepare("SELECT id FROM calendrier_mee_sur_seine WHERE objet = ? AND date_de_debut = ? AND (salle IS NULL OR salle = '') AND heure_de_debut = ?");
+                        $stmt->execute([$objet, $dateDebut, $heureDebut]);
+                    } else {
+                        $stmt = $db->prepare("SELECT id FROM calendrier_mee_sur_seine WHERE objet = ? AND date_de_debut = ? AND (salle IS NULL OR salle = '') AND (heure_de_debut IS NULL OR heure_de_debut = '')");
+                        $stmt->execute([$objet, $dateDebut]);
+                    }
+                } else {
+                    // Pas de date, chercher par objet uniquement
+                    $stmt = $db->prepare("SELECT id FROM calendrier_mee_sur_seine WHERE objet = ? AND date_de_debut IS NULL");
+                    $stmt->execute([$objet]);
+                }
+                $existing = $stmt->fetch();
+                
+                if ($existing) {
+                    // Existe déjà, on ignore
+                    continue;
+                }
+                
+                // N'existe pas, on ajoute
+                $stmt = $db->prepare("
+                    INSERT INTO calendrier_mee_sur_seine 
+                    (service, date_de_debut, date_de_fin, plage_horaire, objet, salle, 
+                     heure_de_debut, heure_de_fin, data_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $result = $stmt->execute([
+                    $service ?: null,
+                    $dateDebut,
+                    $dateFin,
+                    $plageHoraire ?: null,
+                    $objet,
+                    $salle ?: null,
+                    $heureDebut,
+                    $heureFin,
+                    json_encode($item)
+                ]);
+                
+                if ($result) {
+                    $saved++;
+                } else {
+                    $errors++;
+                }
+            } catch (Exception $e) {
+                $errors++;
+                error_log("Erreur calendrier Mée-sur-Seine: " . $e->getMessage());
+            }
+        }
+        
+        echo "✅ Calendrier Mée-sur-Seine: $saved créés, $errors erreurs\n";
         return ['success' => true, 'saved' => $saved, 'updated' => 0, 'errors' => $errors];
     }
     
@@ -654,7 +784,7 @@ class DecodeApi {
     }
     
     /**
-     * Synchroniser uniquement les événements (manifestations sportives et agenda culturel)
+     * Synchroniser uniquement les événements (manifestations sportives, agenda culturel et calendrier Mée-sur-Seine)
      */
     public static function syncEvenements() {
         echo "=== Début de la synchronisation des événements ===\n\n";
@@ -662,16 +792,24 @@ class DecodeApi {
         $resultManifestations = self::syncManifestationsSportives();
         echo "\n";
         $resultAgenda = self::syncAgendaCulturel();
+        echo "\n";
+        $resultCalendrierMee = self::syncCalendrierMeeSurSeine();
         
         echo "\n=== Résumé ===\n";
-        echo "Manifestations sportives: {$resultManifestations['saved']} créées\n";
+        if (isset($resultManifestations['skipped']) && $resultManifestations['skipped']) {
+            echo "Manifestations sportives: Dataset non disponible (ignoré)\n";
+        } else {
+            echo "Manifestations sportives: {$resultManifestations['saved']} créées\n";
+        }
         echo "Agenda culturel: {$resultAgenda['saved']} créés\n";
-        echo "Total erreurs: " . ($resultManifestations['errors'] + $resultAgenda['errors']) . "\n";
+        echo "Calendrier Mée-sur-Seine: {$resultCalendrierMee['saved']} créés\n";
+        echo "Total erreurs: " . ($resultManifestations['errors'] + $resultAgenda['errors'] + $resultCalendrierMee['errors']) . "\n";
         
         return [
-            'success' => $resultManifestations['success'] && $resultAgenda['success'],
+            'success' => $resultAgenda['success'] && $resultCalendrierMee['success'],
             'manifestations' => $resultManifestations,
-            'agenda' => $resultAgenda
+            'agenda' => $resultAgenda,
+            'calendrier_mee' => $resultCalendrierMee
         ];
     }
     

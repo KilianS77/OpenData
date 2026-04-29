@@ -208,6 +208,30 @@ CREATE TABLE IF NOT EXISTS `agenda_culturel` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `calendrier_mee_sur_seine`
+-- Table indépendante (pas de contraintes de clé étrangère)
+--
+
+CREATE TABLE IF NOT EXISTS `calendrier_mee_sur_seine` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `service` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `date_de_debut` date DEFAULT NULL,
+  `date_de_fin` date DEFAULT NULL,
+  `plage_horaire` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `objet` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `salle` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `heure_de_debut` time DEFAULT NULL,
+  `heure_de_fin` time DEFAULT NULL,
+  `data_json` json DEFAULT NULL,
+  `last_updated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_date_debut` (`date_de_debut`),
+  KEY `idx_service` (`service`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `points_interets`
 -- Table indépendante (pas de contraintes de clé étrangère)
 --
